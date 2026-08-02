@@ -11,7 +11,7 @@ import path from "path";
 import cron from "node-cron";
 
 import { limiter } from "./middlewares/rateLimiter";
-import routes from "./routes";
+import routes from "./routes/v1";
 
 export const app = express();
 
