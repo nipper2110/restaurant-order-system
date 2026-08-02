@@ -1,0 +1,7 @@
+.idea/
+backend/
+*.drawio.bkp
+*.bkp
+
+node_modules/
+.env
