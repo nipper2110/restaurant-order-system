@@ -7,8 +7,8 @@
     "moduleResolution": "Node",
 
     "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
+    "rootDir": ".",
+    "outDir": "dist",
 
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
