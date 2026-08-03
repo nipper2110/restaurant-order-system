@@ -8,3 +8,35 @@ export const checkUserExist = (user: any) => {
     throw error;
   }
 };
+
+export const checkOtpErrorIfSameDate = (
+  isSameDate: boolean,
+  errorCount: number,
+) => {
+  if (isSameDate && errorCount === 5) {
+    const error: any = new Error(
+      "OTP is wrong for 5 times. Please try again tomorrow.",
+    );
+    error.status = 409;
+    error.code = errorCode.overLimit;
+    throw error;
+  }
+};
+
+export const checkOtpRow = (otpRow: any) => {
+  if (!otpRow) {
+    const error: any = new Error("Email is incorrect.");
+    error.status = 400;
+    error.code = errorCode.invalid;
+    throw error;
+  }
+};
+
+export const checkAdminAlreadyExist = (existingAdmin: any) => {
+  if (existingAdmin) {
+    const error: any = new Error("Admin registration is no longer available.");
+    error.status = 403;
+    error.code = errorCode.forbidden;
+    throw error;
+  }
+};
