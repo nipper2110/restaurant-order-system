@@ -40,3 +40,12 @@ export const checkAdminAlreadyExist = (existingAdmin: any) => {
     throw error;
   }
 };
+
+export const checkUserIfNotExist = (user: any) => {
+  if (!user) {
+    const error: any = new Error("This email has not been registered.");
+    error.status = 401;
+    error.code = errorCode.unauthenticated;
+    throw error;
+  }
+};

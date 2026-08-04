@@ -38,6 +38,12 @@ export const updateUser = async (id: number, userData: any) => {
   });
 };
 
+export const getUserById = async (id: number) => {
+  return prisma.admin.findUnique({
+    where: { id },
+  });
+};
+
 export const getAnyAdmin = async () => {
   return prisma.admin.findFirst();
 };

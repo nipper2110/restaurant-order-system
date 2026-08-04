@@ -12,6 +12,7 @@ import {
   getAnyAdmin,
   getOtpByEmail,
   getUserByEmail,
+  getUserById,
   updateOtp,
   updateUser,
 } from "../services/authService";
@@ -20,6 +21,7 @@ import {
   checkOtpErrorIfSameDate,
   checkOtpRow,
   checkUserExist,
+  checkUserIfNotExist,
 } from "../utils/auth";
 import { generateToken } from "../utils/generate";
 
@@ -293,3 +295,182 @@ export const confirmPassword = [
       });
   },
 ];
+
+export const login = [
+  body("email", "Invalid email").trim().notEmpty().isEmail().normalizeEmail(),
+  body("password", "Password must be 6 digits")
+    .trim()
+    .notEmpty()
+    .matches("^[0-9]+$")
+    .isLength({ min: 6, max: 6 }),
+  async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const { email, password } = req.body;
+
+    const user = await getUserByEmail(email);
+    checkUserIfNotExist(user);
+
+    const isMatchPassword = await bcrypt.compare(password, user!.password);
+    if (!isMatchPassword) {
+      // Starting to record wrong times
+      const lastRequest = new Date(user!.updatedAt).toLocaleDateString();
+      const today = new Date().toLocaleDateString();
+      const isSameDate = lastRequest === today;
+
+      // Today passwrod is wrong first time
+      if (!isSameDate) {
+        const userData = {
+          errorLoginCount: 1,
+        };
+        await updateUser(user!.id, userData);
+      } else {
+        // Today password was wrong 2 times
+        if (user!.errorLoginCount >= 2) {
+          const userData = {
+            status: "FREEZE",
+          };
+          await updateUser(user!.id, userData);
+        } else {
+          // Today password was wrong 1 time
+          const userData = {
+            errorLoginCount: {
+              increment: 1,
+            },
+          };
+          await updateUser(user!.id, userData);
+        }
+      }
+      // Ending
+      return next(createError(req.t("wrongPassword"), 401, errorCode.invalid));
+    }
+
+    // Authorization token
+    const accessTokenPayload = { id: user!.id };
+    const refreshTokenPayload = { id: user!.id, email: user!.email };
+
+    const accessToken = jwt.sign(
+      accessTokenPayload,
+      process.env.ACCESS_TOKEN_SECRET!,
+      {
+        expiresIn: 60 * 15,
+      },
+    );
+
+    const refreshToken = jwt.sign(
+      refreshTokenPayload,
+      process.env.REFRESH_TOKEN_SECRET!,
+      {
+        expiresIn: "30d",
+      },
+    );
+
+    const userData = {
+      errorLoginCount: 0,
+      randToken: refreshToken,
+    };
+    await updateUser(user!.id, userData);
+
+    res
+      .cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        maxAge: 15 * 60 * 1000, // 15 min
+        path: "/",
+      })
+      .cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
+      })
+      .status(200)
+      .json({
+        message: "Successfully logged in",
+        userId: user!.id,
+      });
+  },
+];
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  // Clear HttpOnly cookies
+  const refreshToken = req.cookies ? req.cookies.refreshToken : null;
+  if (!refreshToken) {
+    return next(
+      createError(
+        "You are not an authenticated user.",
+        401,
+        errorCode.unauthenticated,
+      ),
+    );
+  }
+
+  let decoded;
+  try {
+    decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET!) as {
+      id: number;
+      email: string;
+    };
+  } catch (err) {
+    return next(
+      createError(
+        "You are not an authenticated user.",
+        401,
+        errorCode.unauthenticated,
+      ),
+    );
+  }
+
+  if (isNaN(decoded.id)) {
+    return next(
+      createError(
+        "You are not an authenticated user.",
+        401,
+        errorCode.unauthenticated,
+      ),
+    );
+  }
+
+  const user = await getUserById(decoded.id);
+  checkUserIfNotExist(user);
+
+  if (user?.email !== decoded.email) {
+    return next(
+      createError(
+        "You are not an authenticated user.",
+        401,
+        errorCode.unauthenticated,
+      ),
+    );
+  }
+
+  // Update randToken in User Table
+  const userData = {
+    randToken: generateToken(),
+  };
+  await updateUser(user.id, userData);
+
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    path: "/",
+  });
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    path: "/",
+  });
+
+  res.status(200).json({ message: "Successfully logged out. See you soon." });
+};
