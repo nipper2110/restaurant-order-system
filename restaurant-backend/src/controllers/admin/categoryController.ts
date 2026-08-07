@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { body, validationResult } from "express-validator";
+import { body, param, validationResult } from "express-validator";
 import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
 import {
   CategoryArgs,
   createOneCategory,
   deleteOneCategory,
+  getCategoriesList,
   getCategoryById,
   getCategoryByName,
+  getOneCategory,
   updateOneCategory,
 } from "../../services/postService";
 import {
@@ -15,6 +17,13 @@ import {
   checkCategoryIfNotExist,
 } from "../../utils/category";
 import CacheQueue from "../../jobs/queues/cacheQueue";
+import { getUserById } from "../../services/authService";
+import { checkUserIfNotExist } from "../../utils/auth";
+import { getOrSetCache } from "../../utils/cache";
+
+interface CustomRequest extends Request {
+  userId?: number;
+}
 
 export const createCategory = [
   body("name", "Invalid category name.")
@@ -79,6 +88,14 @@ export const updateCategory = [
 
     const categoryUpdated = await updateOneCategory(category!.id, data);
 
+    await CacheQueue.add(
+      "invalidate-category-cache",
+      {
+        pattern: "categories:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
     res.status(200).json({
       message: "Successfully updated the category.",
       categoryId: categoryUpdated.id,
@@ -101,9 +118,62 @@ export const deleteCategory = [
 
     const categoryDeleted = await deleteOneCategory(category!.id);
 
+    await CacheQueue.add(
+      "invalidate-category-cache",
+      {
+        pattern: "categories:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
     res.status(200).json({
       message: "Successfully deleted the category.",
       categoryId: category?.id,
     });
+  },
+];
+
+export const getCategory = [
+  param("id", "Category ID is required.").isInt({ min: 1 }),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const categoryId = Number(req.params.id);
+
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
+
+    const cacheKey = `categories:${categoryId}`;
+    const category = await getOrSetCache(cacheKey, async () => {
+      return await getOneCategory(+categoryId);
+    });
+
+    checkCategoryIfNotExist(category);
+
+    res.status(200).json({ message: "Category Detail", category });
+  },
+];
+
+export const getCategories = [
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
+
+    const cacheKey = "categories:all";
+    const category = await getOrSetCache(cacheKey, async () => {
+      return await getCategoriesList();
+    });
+
+    res.status(200).json({ message: "Categories List", category });
   },
 ];

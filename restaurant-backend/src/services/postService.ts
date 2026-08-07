@@ -39,3 +39,13 @@ export const deleteOneCategory = async (id: number) => {
     where: { id },
   });
 };
+
+export const getOneCategory = async (id: number) => {
+  return prisma.category.findUnique({
+    where: { id },
+  });
+};
+
+export const getCategoriesList = async () => {
+  return prisma.category.findMany();
+};
