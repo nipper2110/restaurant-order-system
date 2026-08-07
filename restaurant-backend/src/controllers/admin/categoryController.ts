@@ -14,6 +14,7 @@ import {
   checkCategoryExist,
   checkCategoryIfNotExist,
 } from "../../utils/category";
+import CacheQueue from "../../jobs/queues/cacheQueue";
 
 export const createCategory = [
   body("name", "Invalid category name.")
@@ -36,6 +37,14 @@ export const createCategory = [
     };
 
     const category = await createOneCategory(data);
+
+    await CacheQueue.add(
+      "invalidate-category-cache",
+      {
+        pattern: "categories:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
 
     res.status(201).json({
       message: "Successfully created a new category.",
