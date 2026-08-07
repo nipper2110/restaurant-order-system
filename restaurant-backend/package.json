@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "dev": "npm-run-all --parallel dev:node dev:cache",
+    "dev": "npm-run-all --parallel dev:node dev:work dev:cache",
     "dev:node": "nodemon --exec tsx src/index.ts",
+    "dev:work": "nodemon --exec tsx src/jobs/workers/imageWorker.ts",
     "dev:cache": "nodemon --exec tsx src/jobs/workers/cacheWorker.ts",
     "build": "tsc -p .",
     "start": "node dist/index.js"
@@ -62,6 +63,7 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "node-cron": "^4.6.0",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "sharp": "^0.35.3"
   }
 }

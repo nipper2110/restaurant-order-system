@@ -5,7 +5,10 @@ import { errorCode } from "../../../config/errorCode";
 import { getUserById } from "../../services/authService";
 import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
-import { getCategoriesList, getOneCategory } from "../../services/postService";
+import {
+  getCategoriesList,
+  getOneCategory,
+} from "../../services/categoryService";
 import { checkCategoryIfNotExist } from "../../utils/category";
 
 interface CustomRequest extends Request {

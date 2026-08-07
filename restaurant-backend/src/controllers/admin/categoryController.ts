@@ -11,7 +11,7 @@ import {
   getCategoryByName,
   getOneCategory,
   updateOneCategory,
-} from "../../services/postService";
+} from "../../services/categoryService";
 import {
   checkCategoryExist,
   checkCategoryIfNotExist,

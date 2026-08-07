@@ -49,13 +49,13 @@ model MenuItem {
   description String?
   price       Decimal  @db.Decimal(10, 2)
   isAvailable Boolean  @default(true)
+  image       String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
 
-  images         Image[]
   productOptions ProductOption[]
   orderItems     OrderItem[]
 }
@@ -63,9 +63,6 @@ model MenuItem {
 model Image {
   id   Int    @id @default(autoincrement())
   path String @db.VarChar(255)
-
-  menuItemId Int
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 }
 
 model ProductOption {
