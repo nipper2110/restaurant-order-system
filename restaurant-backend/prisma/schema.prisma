@@ -13,10 +13,16 @@ enum TableStatus {
   OCCUPIED
 }
 
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
 model Admin {
   id              Int       @id @default(autoincrement())
   name            String?    @db.VarChar(100)
   email           String    @unique @db.VarChar(255)
+  role            Role      @default(ADMIN)
   password        String
   lastLogin       DateTime?
   errorLoginCount Int       @default(0) @db.SmallInt

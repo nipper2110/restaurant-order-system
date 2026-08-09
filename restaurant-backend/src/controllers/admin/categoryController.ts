@@ -79,8 +79,8 @@ export const updateCategory = [
     const category = await getCategoryById(+categoryId);
     checkCategoryIfNotExist(category);
 
-    const existingCategory = await getCategoryByName(name);
-    checkCategoryExist(existingCategory);
+    // const existingCategory = await getCategoryByName(name);
+    // checkCategoryExist(existingCategory);
 
     const data: CategoryArgs = {
       name,

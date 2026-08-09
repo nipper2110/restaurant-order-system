@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import { prisma } from "./prismaClient";
 
 export type MenuItemArgs = {
   name: string;
@@ -70,4 +70,29 @@ export const deleteOneMenuItem = async (id: number) => {
   return prisma.menuItem.delete({
     where: { id },
   });
+};
+
+export const getOneMenuItem = async (id: number) => {
+  return prisma.menuItem.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      price: true,
+      isAvailable: true,
+      image: true,
+      createdAt: true,
+      updatedAt: true,
+      category: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+};
+
+export const getMenuItemList = async (options: any) => {
+  return prisma.menuItem.findMany(options);
 };
