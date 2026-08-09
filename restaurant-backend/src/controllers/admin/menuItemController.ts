@@ -238,9 +238,9 @@ export const deleteMenuItem = [
     await removeFiles(menuItem!.image, optimizedFile);
 
     await CacheQueue.add(
-      "invalidate-post-cache",
+      "invalidate-menuItem-cache",
       {
-        pattern: "posts:*",
+        pattern: "menuItems:*",
       },
       {
         jobId: `invalidate-${Date.now()}`,

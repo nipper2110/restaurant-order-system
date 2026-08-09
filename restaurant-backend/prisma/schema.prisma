@@ -51,7 +51,7 @@ model Category {
 
 model MenuItem {
   id          Int      @id @default(autoincrement())
-  name        String   @db.VarChar(52)
+  name        String   @unique @db.VarChar(52)
   description String?
   price       Decimal  @db.Decimal(10, 2)
   isAvailable Boolean  @default(true)
@@ -73,7 +73,7 @@ model Image {
 
 model ProductOptionCategory {
   id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(50)
+  name       String   @unique @db.VarChar(50)
   isRequired Boolean  @default(false)
   menuItemId Int
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
@@ -83,7 +83,7 @@ model ProductOptionCategory {
 
 model ProductOption {
   id              Int     @id @default(autoincrement())
-  name            String  @db.VarChar(100)
+  name            String  @unique @db.VarChar(100)
   additionalPrice Decimal @default(0) @db.Decimal(10, 2)
 
   productOptionCategoryId Int

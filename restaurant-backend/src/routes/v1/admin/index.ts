@@ -16,6 +16,11 @@ import {
   updateMenuItem,
 } from "../../../controllers/admin/menuItemController";
 import { auth } from "../../../middlewares/auth";
+import {
+  createProductOptionCategory,
+  deleteProductOptionCategory,
+  updateProductOptionCategory,
+} from "../../../controllers/admin/productOptionCategoryController";
 
 const router = express.Router();
 
@@ -32,5 +37,12 @@ router.get("/menu-items", auth, getMenuItems);
 router.get("/menu-items/:id", auth, getMenuItem);
 router.patch("/menu-items", upload.single("image"), updateMenuItem);
 router.delete("/menu-items", deleteMenuItem);
+
+// CRUD for Product Option Category
+router.post("/product-option-categories", createProductOptionCategory);
+// router.get("/product-option-categories", auth, getProductOptionCategories);
+// router.get("/product-option-categoried/:id", auth, getProductOptionCategory);
+router.patch("/product-option-categories", updateProductOptionCategory);
+router.delete("/product-option-categories", deleteProductOptionCategory);
 
 export default router;
