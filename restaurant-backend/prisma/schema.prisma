@@ -20,7 +20,7 @@ enum Role {
 
 model Admin {
   id              Int       @id @default(autoincrement())
-  name            String?    @db.VarChar(100)
+  name            String?   @db.VarChar(100)
   email           String    @unique @db.VarChar(255)
   role            Role      @default(ADMIN)
   password        String
@@ -62,8 +62,8 @@ model MenuItem {
   categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
 
-  productOptions ProductOption[]
-  orderItems     OrderItem[]
+  productOptionCategory ProductOptionCategory[]
+  orderItems            OrderItem[]
 }
 
 model Image {
@@ -71,13 +71,23 @@ model Image {
   path String @db.VarChar(255)
 }
 
+model ProductOptionCategory {
+  id         Int      @id @default(autoincrement())
+  name       String   @db.VarChar(50)
+  isRequired Boolean  @default(false)
+  menuItemId Int
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  options ProductOption[]
+}
+
 model ProductOption {
   id              Int     @id @default(autoincrement())
   name            String  @db.VarChar(100)
   additionalPrice Decimal @default(0) @db.Decimal(10, 2)
 
-  menuItemId Int
-  menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  productOptionCategoryId Int
+  productOptionCategory   ProductOptionCategory @relation(fields: [productOptionCategoryId], references: [id], onDelete: Cascade)
 
   orderItems OrderItem[]
 }
