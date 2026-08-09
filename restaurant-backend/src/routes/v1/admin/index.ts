@@ -19,6 +19,8 @@ import { auth } from "../../../middlewares/auth";
 import {
   createProductOptionCategory,
   deleteProductOptionCategory,
+  getProductOptionCategories,
+  getProductOptionCategory,
   updateProductOptionCategory,
 } from "../../../controllers/admin/productOptionCategoryController";
 
@@ -40,8 +42,8 @@ router.delete("/menu-items", deleteMenuItem);
 
 // CRUD for Product Option Category
 router.post("/product-option-categories", createProductOptionCategory);
-// router.get("/product-option-categories", auth, getProductOptionCategories);
-// router.get("/product-option-categoried/:id", auth, getProductOptionCategory);
+router.get("/product-option-categories", auth, getProductOptionCategories);
+router.get("/product-option-categories/:id", auth, getProductOptionCategory);
 router.patch("/product-option-categories", updateProductOptionCategory);
 router.delete("/product-option-categories", deleteProductOptionCategory);
 

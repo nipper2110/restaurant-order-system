@@ -61,12 +61,12 @@ export const deleteOneProductOptionCategory = async (id: number) => {
   });
 };
 
-// export const getOneProductOptionCategory = async (id: number) => {
-//   return prisma.productOptionCategory.findUnique({
-//     where: { id },
-//   });
-// };
+export const getOneProductOptionCategory = async (id: number) => {
+  return prisma.productOptionCategory.findUnique({
+    where: { id },
+  });
+};
 
-// export const getProductOptionCategoriesList = async () => {
-//   return prisma.productOptionCategory.findMany();
-// };
+export const getProductOptionCategoriesList = async () => {
+  return prisma.productOptionCategory.findMany();
+};

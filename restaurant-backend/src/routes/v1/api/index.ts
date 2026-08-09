@@ -8,6 +8,10 @@ import {
   getMenuItem,
   getMenuItems,
 } from "../../../controllers/api/menuItemController";
+import {
+  getProductOptionCategories,
+  getProductOptionCategory,
+} from "../../../controllers/admin/productOptionCategoryController";
 
 const router = express.Router();
 
@@ -18,5 +22,9 @@ router.get("/categories/:id", auth, getCategory);
 // For Menu Items
 router.get("/menu-items", auth, getMenuItems);
 router.get("/menu-items/:id", auth, getMenuItem);
+
+// For Product Option Category
+router.get("/product-option-categories", auth, getProductOptionCategories);
+router.get("/product-option-categories/:id", auth, getProductOptionCategory);
 
 export default router;
