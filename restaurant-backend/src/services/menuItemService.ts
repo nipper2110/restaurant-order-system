@@ -37,6 +37,12 @@ export const getMenuItemById = async (id: number) => {
   });
 };
 
+export const getMenuItemByName = async (name: string) => {
+  return prisma.menuItem.findUnique({
+    where: { name },
+  });
+};
+
 export const updateOneMenuItem = async (
   menuItemId: number,
   menuItemData: MenuItemArgs,

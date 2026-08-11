@@ -24,11 +24,11 @@ export const createOneProductOptionCategory = async (
   });
 };
 
-export const getProductOptionCategoryByName = async (name: string) => {
-  return prisma.productOptionCategory.findUnique({
-    where: { name },
-  });
-};
+// export const getProductOptionCategoryByName = async (name: string) => {
+//   return prisma.productOptionCategory.findUnique({
+//     where: { name },
+//   });
+// };
 
 export const getProductOptionCategoryById = async (id: number) => {
   return prisma.productOptionCategory.findUnique({

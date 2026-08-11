@@ -29,7 +29,8 @@ export const createCategory = [
   body("name", "Invalid category name.")
     .notEmpty()
     .trim()
-    .isLength({ min: 2, max: 50 }),
+    .isLength({ min: 2, max: 50 })
+    .escape(),
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
@@ -79,8 +80,8 @@ export const updateCategory = [
     const category = await getCategoryById(+categoryId);
     checkCategoryIfNotExist(category);
 
-    const existingCategory = await getCategoryByName(name);
-    checkCategoryExist(existingCategory);
+    // const existingCategory = await getCategoryByName(name);
+    // checkCategoryExist(existingCategory);
 
     const data: CategoryArgs = {
       name,

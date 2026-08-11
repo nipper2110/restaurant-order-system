@@ -17,3 +17,12 @@ export const checkModelIfNotExist = (model: any) => {
     throw error;
   }
 };
+
+export const checkModelIfExist = (model: any) => {
+  if (model) {
+    const error: any = new Error("This model existed.");
+    error.status = 409;
+    error.code = errorCode.invalid;
+    throw error;
+  }
+};

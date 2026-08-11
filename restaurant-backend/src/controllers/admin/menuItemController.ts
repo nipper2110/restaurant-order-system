@@ -4,13 +4,18 @@ import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
 import path from "path";
 import { unlink } from "fs/promises";
-import { checkModelIfNotExist, checkUploadFile } from "../../utils/check";
+import {
+  checkModelIfExist,
+  checkModelIfNotExist,
+  checkUploadFile,
+} from "../../utils/check";
 import ImageQueue from "../../jobs/queues/imageQueue";
 import CacheQueue from "../../jobs/queues/cacheQueue";
 import {
   createOneMenuItem,
   deleteOneMenuItem,
   getMenuItemById,
+  getMenuItemByName,
   getMenuItemList,
   getOneMenuItem,
   MenuItemArgs,
@@ -108,6 +113,9 @@ export const createMenuItem = [
       image: req.file!.filename,
     };
 
+    const existingMenuItem = await getMenuItemByName(data.name);
+    checkModelIfExist(existingMenuItem);
+
     const menuItem = await createOneMenuItem(data);
 
     await CacheQueue.add(
@@ -171,6 +179,9 @@ export const updateMenuItem = [
       category,
       image: req.file,
     };
+
+    const existingMenuItem = await getMenuItemByName(data.name);
+    checkModelIfExist(existingMenuItem);
 
     if (req.file) {
       data.image = req.file.filename;
