@@ -1,4 +1,6 @@
+import { errorCode } from "../../config/errorCode";
 import { prisma } from "../lib/prisma";
+import { createError } from "../utils/error";
 
 export type ProductOptionCategoryArgs = {
   name: string;
@@ -24,11 +26,27 @@ export const createOneProductOptionCategory = async (
   });
 };
 
-// export const getProductOptionCategoryByName = async (name: string) => {
-//   return prisma.productOptionCategory.findUnique({
-//     where: { name },
-//   });
-// };
+export const getProductOptionCategoryByName = async (
+  menuName: string,
+  optionCategoryName: string,
+) => {
+  const menuItem = await prisma.menuItem.findUnique({
+    where: { name: menuName },
+  });
+
+  if (!menuItem) {
+    throw createError("Menu item is not existed.", 400, errorCode.invalid);
+  }
+
+  return prisma.productOptionCategory.findUnique({
+    where: {
+      menuItemId_name: {
+        menuItemId: menuItem.id,
+        name: optionCategoryName,
+      },
+    },
+  });
+};
 
 export const getProductOptionCategoryById = async (id: number) => {
   return prisma.productOptionCategory.findUnique({
@@ -40,6 +58,14 @@ export const updateOneProductOptionCategory = async (
   id: number,
   categoryData: ProductOptionCategoryArgs,
 ) => {
+  const menuItem = await prisma.menuItem.findUnique({
+    where: { name: categoryData.menuItem },
+  });
+
+  if (!menuItem) {
+    throw createError("Menu item is not existed.", 400, errorCode.invalid);
+  }
+
   const data: any = {
     name: categoryData.name,
     isRequired: categoryData.isRequired,
@@ -68,5 +94,9 @@ export const getOneProductOptionCategory = async (id: number) => {
 };
 
 export const getProductOptionCategoriesList = async () => {
-  return prisma.productOptionCategory.findMany();
+  return prisma.productOptionCategory.findMany({
+    orderBy: {
+      id: "asc",
+    },
+  });
 };

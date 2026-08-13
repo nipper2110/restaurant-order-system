@@ -47,7 +47,10 @@ export const createProductOptionCategory = [
 
     const { name, isRequired, menuItem } = req.body;
 
-    const existingCategory = await getProductOptionCategoryByName(name);
+    const existingCategory = await getProductOptionCategoryByName(
+      menuItem,
+      name,
+    );
     checkCategoryExist(existingCategory);
 
     const data: ProductOptionCategoryArgs = {
@@ -61,7 +64,7 @@ export const createProductOptionCategory = [
     await CacheQueue.add(
       "invalidate-product-option-category-cache",
       {
-        pattern: "productOtpionCategories:*",
+        pattern: "productOptionCategories:*",
       },
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
@@ -113,7 +116,7 @@ export const updateProductOptionCategory = [
     await CacheQueue.add(
       "invalidate-product-option-category-cache",
       {
-        pattern: "productOtpionCategories:*",
+        pattern: "productOptionCategories:*",
       },
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
@@ -145,7 +148,7 @@ export const deleteProductOptionCategory = [
     await CacheQueue.add(
       "invalidate-product-option-category-cache",
       {
-        pattern: "productOtpionCategories:*",
+        pattern: "productOptionCategories:*",
       },
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
