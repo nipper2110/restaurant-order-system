@@ -1,161 +1,174 @@
-// import { Request, Response, NextFunction } from "express";
-// import { body, param, validationResult } from "express-validator";
-// import { createError } from "../../utils/error";
-// import { errorCode } from "../../../config/errorCode";
-// import {
-//   checkCategoryExist,
-//   checkCategoryIfNotExist,
-// } from "../../utils/category";
-// import {
-//   createOneProductOptionCategory,
-//   deleteOneProductOptionCategory,
-//   getOneProductOptionCategory,
-//   getProductOptionCategoriesList,
-//   getProductOptionCategoryById,
-//   getProductOptionCategoryByName,
-//   ProductOptionCategoryArgs,
-//   updateOneProductOptionCategory,
-// } from "../../services/productOptionCategoryService";
-// import CacheQueue from "../../jobs/queues/cacheQueue";
-// import { checkModelIfNotExist } from "../../utils/check";
-// import { getUserById } from "../../services/authService";
-// import { checkUserIfNotExist } from "../../utils/auth";
-// import { getOrSetCache } from "../../utils/cache";
-// import { getOneCategory } from "../../services/categoryService";
+import { Request, Response, NextFunction } from "express";
+import { body, param, validationResult } from "express-validator";
+import { createError } from "../../utils/error";
+import { errorCode } from "../../../config/errorCode";
+import {
+  checkCategoryExist,
+  checkCategoryIfNotExist,
+} from "../../utils/category";
+import CacheQueue from "../../jobs/queues/cacheQueue";
+import { checkModelIfNotExist } from "../../utils/check";
+import { getUserById } from "../../services/authService";
+import { checkUserIfNotExist } from "../../utils/auth";
+import { getOrSetCache } from "../../utils/cache";
+import { getOneCategory } from "../../services/categoryService";
+import {
+  createOneProductOption,
+  deleteOneProductOption,
+  getProductOptionById,
+  getProductOptionByName,
+  ProductOptionArgs,
+  updateOneProductOption,
+} from "../../services/productOption";
 
-// interface CustomRequest extends Request {
-//   userId?: number;
-//   user?: any;
-// }
+interface CustomRequest extends Request {
+  userId?: number;
+  user?: any;
+}
 
-// export const createProductOptionCategory = [
-//   body("name", "Invalid product option category name.")
-//     .notEmpty()
-//     .trim()
-//     .isLength({ min: 2, max: 50 }),
-//   body("isRequired", "Is required must be a boolean value.")
-//     .notEmpty()
-//     .isBoolean()
-//     .toBoolean(),
-//   body("menuItem", "Menu Item is required.").notEmpty().trim().escape(),
+export const createProductOption = [
+  body("name", "Invalid product option name.")
+    .notEmpty()
+    .trim()
+    .isLength({ min: 2, max: 50 }),
+  body("additionalPrice", "Invalid additional price.")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 })
+    .toFloat(),
+  body("productOptionCategory", "Invalid product option category.")
+    .notEmpty()
+    .trim()
+    .escape(),
 
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const errors = validationResult(req).array({ onlyFirstError: true });
-//     if (errors.length > 0) {
-//       return next(createError(errors[0].msg, 400, errorCode.invalid));
-//     }
+  async (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
 
-//     const { name, isRequired, menuItem } = req.body;
+    const { name, additionalPrice, productOptionCategory } = req.body;
 
-//     const existingCategory = await getProductOptionCategoryByName(name);
-//     checkCategoryExist(existingCategory);
+    const existingCategory = await getProductOptionByName(
+      productOptionCategory,
+      name,
+    );
+    checkCategoryExist(existingCategory);
 
-//     const data: ProductOptionCategoryArgs = {
-//       name,
-//       isRequired,
-//       menuItem,
-//     };
+    const data: ProductOptionArgs = {
+      name,
+      productOptionCategory,
+    };
 
-//     const category = await createOneProductOptionCategory(data);
+    if (additionalPrice !== undefined && additionalPrice !== "") {
+      data.additionalPrice = additionalPrice;
+    }
 
-//     await CacheQueue.add(
-//       "invalidate-product-option-category-cache",
-//       {
-//         pattern: "productOtpionCategories:*",
-//       },
-//       { jobId: `invalidate-${Date.now()}`, priority: 1 },
-//     );
+    const productOption = await createOneProductOption(data);
 
-//     res.status(201).json({
-//       message: "Successfully created a new product option category.",
-//       categoryId: category.id,
-//     });
-//   },
-// ];
+    await CacheQueue.add(
+      "invalidate-product-option-cache",
+      {
+        pattern: "productOptions:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
 
-// export const updateProductOptionCategory = [
-//   body("categoryId", "Category Id is required.").isInt({ min: 1 }),
-//   body("name", "Invalid product option category name.")
-//     .notEmpty()
-//     .trim()
-//     .isLength({ min: 2, max: 50 }),
-//   body("isRequired", "Is required must be a boolean value.")
-//     .notEmpty()
-//     .isBoolean()
-//     .toBoolean(),
-//   body("menuItem", "Menu Item is required.").notEmpty().trim().escape(),
-//   async (req: CustomRequest, res: Response, next: NextFunction) => {
-//     const errors = validationResult(req).array({ onlyFirstError: true });
-//     if (errors.length > 0) {
-//       return next(createError(errors[0].msg, 400, errorCode.invalid));
-//     }
+    res.status(201).json({
+      message: "Successfully created a new product option.",
+      productOptionId: productOption.id,
+    });
+  },
+];
 
-//     const { categoryId, name, isRequired, menuItem } = req.body;
+export const updateProductOption = [
+  body("productOptionId", "Product Option Id is required.").isInt({ min: 1 }),
+  body("name", "Invalid product option name.")
+    .notEmpty()
+    .trim()
+    .isLength({ min: 2, max: 50 }),
+  body("additionalPrice", "Invalud additional price.")
+    .optional({ values: "falsy" })
+    .isFloat({ min: 0 })
+    .toFloat(),
+  body("productOptionCategory", "Invalid product option category.")
+    .notEmpty()
+    .trim()
+    .escape(),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
 
-//     const category = await getProductOptionCategoryById(+categoryId);
-//     if (!category) {
-//       return next(
-//         createError("This data model does not exist.", 401, errorCode.invalid),
-//       );
-//     }
+    const { productOptionId, name, additionalPrice, productOptionCategory } =
+      req.body;
 
-//     const data: any = {
-//       name,
-//       isRequired,
-//       menuItem,
-//     };
+    const productOption = await getProductOptionById(+productOptionId);
+    if (!productOption) {
+      return next(
+        createError("This data model does not exist.", 401, errorCode.invalid),
+      );
+    }
 
-//     const categoryUpdated = await updateOneProductOptionCategory(
-//       category.id,
-//       data,
-//     );
+    const data: any = {
+      name,
+      additionalPrice,
+      productOptionCategory,
+    };
 
-//     await CacheQueue.add(
-//       "invalidate-product-option-category-cache",
-//       {
-//         pattern: "productOtpionCategories:*",
-//       },
-//       { jobId: `invalidate-${Date.now()}`, priority: 1 },
-//     );
+    const productOptionUpdated = await updateOneProductOption(
+      productOption.id,
+      data,
+    );
 
-//     res.status(200).json({
-//       message: "Successfully updated a product option category.",
-//       productOptionCategoryId: categoryUpdated.id,
-//     });
-//   },
-// ];
+    await CacheQueue.add(
+      "invalidate-product-option-category-cache",
+      {
+        pattern: "productOptions:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
 
-// export const deleteProductOptionCategory = [
-//   body("categoryId", "Category Id is required.").isInt({ gt: 0 }),
+    res.status(200).json({
+      message: "Successfully updated a product option.",
+      productOptionId: productOptionUpdated.id,
+    });
+  },
+];
 
-//   async (req: CustomRequest, res: Response, next: NextFunction) => {
-//     const errors = validationResult(req).array({ onlyFirstError: true });
-//     if (errors.length > 0) {
-//       return next(createError(errors[0].msg, 400, errorCode.invalid));
-//     }
+export const deleteProductOption = [
+  body("productOptionId", "Product Option Id is required.").isInt({ gt: 0 }),
 
-//     const { categoryId } = req.body;
-//     const user = req.user;
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
 
-//     const category = await getProductOptionCategoryById(+categoryId);
-//     checkModelIfNotExist(category);
+    const { productOptionId } = req.body;
+    const user = req.user;
 
-//     const categoryDeleted = await deleteOneProductOptionCategory(category!.id);
+    const productOption = await getProductOptionById(+productOptionId);
+    checkModelIfNotExist(productOption);
 
-//     await CacheQueue.add(
-//       "invalidate-product-option-category-cache",
-//       {
-//         pattern: "productOtpionCategories:*",
-//       },
-//       { jobId: `invalidate-${Date.now()}`, priority: 1 },
-//     );
+    const productOptionDeleted = await deleteOneProductOption(
+      productOption!.id,
+    );
 
-//     res.status(200).json({
-//       message: "Successfully deleted the product option category.",
-//       categoryId: category?.id,
-//     });
-//   },
-// ];
+    await CacheQueue.add(
+      "invalidate-product-option-category-cache",
+      {
+        pattern: "productOptions:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    res.status(200).json({
+      message: "Successfully deleted the product option.",
+      productOptionId: productOption?.id,
+    });
+  },
+];
 
 // export const getProductOptionCategory = [
 //   param("id", "Category ID is required.").isInt({ min: 1 }),

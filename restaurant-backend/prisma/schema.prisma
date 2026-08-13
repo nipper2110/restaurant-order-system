@@ -85,7 +85,7 @@ model ProductOptionCategory {
 model ProductOption {
   id              Int     @id @default(autoincrement())
   name            String  @db.VarChar(100)
-  additionalPrice Decimal @default(0) @db.Decimal(10, 2)
+  additionalPrice Decimal? @default(0) @db.Decimal(10, 2)
 
   productOptionCategoryId Int
   productOptionCategory   ProductOptionCategory @relation(fields: [productOptionCategoryId], references: [id], onDelete: Cascade)

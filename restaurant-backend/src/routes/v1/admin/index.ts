@@ -23,6 +23,11 @@ import {
   getProductOptionCategory,
   updateProductOptionCategory,
 } from "../../../controllers/admin/productOptionCategoryController";
+import {
+  createProductOption,
+  deleteProductOption,
+  updateProductOption,
+} from "../../../controllers/admin/productOptionController";
 
 const router = express.Router();
 
@@ -46,5 +51,12 @@ router.get("/product-option-categories", auth, getProductOptionCategories);
 router.get("/product-option-categories/:id", auth, getProductOptionCategory);
 router.patch("/product-option-categories", updateProductOptionCategory);
 router.delete("/product-option-categories", deleteProductOptionCategory);
+
+// CRUD for Product Option
+router.post("/product-option", createProductOption);
+// router.get("/product-option", auth, getProductOptionCategories);
+// router.get("/product-option/:id", auth, getProductOptionCategory);
+router.patch("/product-option", updateProductOption);
+router.delete("/product-option", deleteProductOption);
 
 export default router;

@@ -28,7 +28,7 @@ export const createOneProductOptionCategory = async (
 
 export const getProductOptionCategoryByName = async (
   menuName: string,
-  optionCategoryName: string,
+  productOptionCategoryName: string,
 ) => {
   const menuItem = await prisma.menuItem.findUnique({
     where: { name: menuName },
@@ -42,7 +42,7 @@ export const getProductOptionCategoryByName = async (
     where: {
       menuItemId_name: {
         menuItemId: menuItem.id,
-        name: optionCategoryName,
+        name: productOptionCategoryName,
       },
     },
   });
@@ -64,6 +64,25 @@ export const updateOneProductOptionCategory = async (
 
   if (!menuItem) {
     throw createError("Menu item is not existed.", 400, errorCode.invalid);
+  }
+
+  const existingProductOptionCategory =
+    await prisma.productOptionCategory.findFirst({
+      where: {
+        name: categoryData.name,
+        menuItemId: menuItem.id,
+        NOT: {
+          id,
+        },
+      },
+    });
+
+  if (existingProductOptionCategory) {
+    throw createError(
+      "Product option category already exists in this category.",
+      409,
+      errorCode.productOptionCategoryExist,
+    );
   }
 
   const data: any = {

@@ -11,4 +11,6 @@ export const errorCode = {
   unauthorised: "Error_Unauthorised",
   maintenance: "Error_Maintenance",
   forbidden: "Error_Forbidden",
+  productOptionExist: "Error_ProductOptionExist",
+  productOptionCategoryExist: "Error_ProductOptionCategoryExist",
 };
