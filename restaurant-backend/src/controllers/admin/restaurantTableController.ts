@@ -24,6 +24,7 @@ import {
   RestaurantTableArgs,
   updateOneRestaurantTable,
 } from "../../services/restaurantTableService";
+import { generateQrCode } from "../../utils/generate";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -32,14 +33,15 @@ interface CustomRequest extends Request {
 
 export const createRestaurantTable = [
   body("tableNumber", "Invalid table number.").isInt({ min: 1 }),
-  body("qrCode", "QR code is required.").notEmpty().isString().trim(),
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
 
-    const { tableNumber, qrCode } = req.body;
+    const { tableNumber } = req.body;
+
+    const qrCode = generateQrCode();
 
     const existingTable = await getRestaurantTableByNumber(tableNumber);
     if (existingTable) {
@@ -73,6 +75,7 @@ export const createRestaurantTable = [
     res.status(201).json({
       message: "Successfully created a new restaurant table.",
       restaurantTableId: restaurantTable.id,
+      qrCode: restaurantTable.qrCode,
     });
   },
 ];
@@ -80,7 +83,6 @@ export const createRestaurantTable = [
 export const updateRestaurantTable = [
   body("tableId", "Table Id is required.").isInt({ min: 1 }),
   body("tableNumber", "Invalid table number.").isInt({ min: 1 }),
-  body("qrCode", "QR code is required.").notEmpty().isString().trim(),
   body("status", "Status is invalid")
     .optional()
     .isIn(["AVAILABLE", "OCCUPIED"]),
@@ -90,7 +92,7 @@ export const updateRestaurantTable = [
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
 
-    const { tableId, tableNumber, qrCode, status } = req.body;
+    const { tableId, tableNumber, status } = req.body;
 
     const restaurantTable = await getRestaurantTableById(+tableId);
     if (!restaurantTable) {
@@ -98,6 +100,8 @@ export const updateRestaurantTable = [
         createError("This data model does not exist.", 401, errorCode.invalid),
       );
     }
+
+    const qrCode = generateQrCode();
 
     const data: any = {
       tableNumber,
@@ -121,6 +125,7 @@ export const updateRestaurantTable = [
     res.status(200).json({
       message: "Successfully updated a restaurant table.",
       restaurantTableId: restaurantTableUpdated.id,
+      qrCode: restaurantTableUpdated.qrCode,
     });
   },
 ];

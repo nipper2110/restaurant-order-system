@@ -79,26 +79,28 @@ model ProductOptionCategory {
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
 
   options ProductOption[]
+
   @@unique([menuItemId, name])
 }
 
 model ProductOption {
-  id              Int     @id @default(autoincrement())
-  name            String  @db.VarChar(100)
+  id              Int      @id @default(autoincrement())
+  name            String   @db.VarChar(100)
   additionalPrice Decimal? @default(0) @db.Decimal(10, 2)
 
   productOptionCategoryId Int
   productOptionCategory   ProductOptionCategory @relation(fields: [productOptionCategoryId], references: [id], onDelete: Cascade)
 
   orderItems OrderItem[]
+
   @@unique([productOptionCategoryId, name])
 }
 
 model RestaurantTable {
-  id          Int         @id @default(autoincrement())
-  tableNumber Int         @unique
-  qrCode      String      @unique @db.VarChar(255)
-  status      TableStatus @default(AVAILABLE)
+  id              Int         @id @default(autoincrement())
+  tableNumber     Int         @unique
+  qrCode          String      @unique @db.VarChar(255)
+  status          TableStatus @default(AVAILABLE)
 
   orders Order[]
 }

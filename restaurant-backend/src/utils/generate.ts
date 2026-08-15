@@ -7,3 +7,7 @@ export const generateOtp = () => {
 export const generateToken = () => {
   return randomBytes(32).toString("hex");
 };
+
+export const generateQrCode = () => {
+  return randomBytes(16).toString("hex");
+};
