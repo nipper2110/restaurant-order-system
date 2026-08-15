@@ -33,6 +33,8 @@ import {
 import {
   createRestaurantTable,
   deleteRestaurantTable,
+  getRestaurantTable,
+  getRestaurantTables,
   updateRestaurantTable,
 } from "../../../controllers/admin/restaurantTableController";
 
@@ -68,8 +70,8 @@ router.delete("/product-option", deleteProductOption);
 
 // CRUD for Restaurant Table
 router.post("/restaurant-table", createRestaurantTable);
-// router.get("/restaurant-table", auth, getProductOptions);
-// router.get("/restaurant-table/:id", auth, getProductOption);
+router.get("/restaurant-table", auth, getRestaurantTables);
+router.get("/restaurant-table/:id", auth, getRestaurantTable);
 router.patch("/restaurant-table", updateRestaurantTable);
 router.delete("/restaurant-table", deleteRestaurantTable);
 

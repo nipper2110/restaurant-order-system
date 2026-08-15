@@ -16,9 +16,11 @@ import { getOneCategory } from "../../services/categoryService";
 import {
   createOneRestaurantTable,
   deleteOneRestaurantTable,
+  getOneRestaurantTable,
   getRestaurantTableById,
   getRestaurantTableByNumber,
   getRestaurantTableByQrCode,
+  getRestaurantTableList,
   RestaurantTableArgs,
   updateOneRestaurantTable,
 } from "../../services/restaurantTableService";
@@ -79,13 +81,16 @@ export const updateRestaurantTable = [
   body("tableId", "Table Id is required.").isInt({ min: 1 }),
   body("tableNumber", "Invalid table number.").isInt({ min: 1 }),
   body("qrCode", "QR code is required.").notEmpty().isString().trim(),
+  body("status", "Status is invalid")
+    .optional()
+    .isIn(["AVAILABLE", "OCCUPIED"]),
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
 
-    const { tableId, tableNumber, qrCode } = req.body;
+    const { tableId, tableNumber, qrCode, status } = req.body;
 
     const restaurantTable = await getRestaurantTableById(+tableId);
     if (!restaurantTable) {
@@ -97,6 +102,7 @@ export const updateRestaurantTable = [
     const data: any = {
       tableNumber,
       qrCode,
+      status,
     };
 
     const restaurantTableUpdated = await updateOneRestaurantTable(
@@ -153,49 +159,49 @@ export const deleteRestaurantTable = [
   },
 ];
 
-// export const getRestaurantTable = [
-//   param("id", "Category ID is required.").isInt({ min: 1 }),
-//   async (req: CustomRequest, res: Response, next: NextFunction) => {
-//     const errors = validationResult(req).array({ onlyFirstError: true });
-//     if (errors.length > 0) {
-//       return next(createError(errors[0].msg, 400, errorCode.invalid));
-//     }
+export const getRestaurantTable = [
+  param("id", "Table ID is required.").isInt({ min: 1 }),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
 
-//     const categoryId = Number(req.params.id);
+    const restaurantTableId = Number(req.params.id);
 
-//     const userId = req.userId;
-//     const user = await getUserById(userId!);
-//     checkUserIfNotExist(user);
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
 
-//     const cacheKey = `productOptionCategories:${categoryId}`;
-//     const category = await getOrSetCache(cacheKey, async () => {
-//       return await getOneProductOptionCategory(+categoryId);
-//     });
+    const cacheKey = `restaurantTables:${restaurantTableId}`;
+    const restaurantTable = await getOrSetCache(cacheKey, async () => {
+      return await getOneRestaurantTable(+restaurantTableId);
+    });
 
-//     checkCategoryIfNotExist(category);
+    checkModelIfNotExist(restaurantTable);
 
-//     res
-//       .status(200)
-//       .json({ message: "Product Option Category Detail", category });
-//   },
-// ];
+    res
+      .status(200)
+      .json({ message: "Restaurant Table Detail", restaurantTable });
+  },
+];
 
-// export const getRestaurantTables = [
-//   async (req: CustomRequest, res: Response, next: NextFunction) => {
-//     const errors = validationResult(req).array({ onlyFirstError: true });
-//     if (errors.length > 0) {
-//       return next(createError(errors[0].msg, 400, errorCode.invalid));
-//     }
+export const getRestaurantTables = [
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
 
-//     const userId = req.userId;
-//     const user = await getUserById(userId!);
-//     checkUserIfNotExist(user);
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
 
-//     const cacheKey = "productOptionCategories:all";
-//     const category = await getOrSetCache(cacheKey, async () => {
-//       return await getProductOptionCategoriesList();
-//     });
+    const cacheKey = "restaurantTables:all";
+    const restaurantTable = await getOrSetCache(cacheKey, async () => {
+      return await getRestaurantTableList();
+    });
 
-//     res.status(200).json({ message: "Categories List", category });
-//   },
-// ];
+    res.status(200).json({ message: "Restaurant Table List", restaurantTable });
+  },
+];

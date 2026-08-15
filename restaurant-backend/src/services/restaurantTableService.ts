@@ -1,10 +1,12 @@
 import { errorCode } from "../../config/errorCode";
+import { TableStatus } from "../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 import { createError } from "../utils/error";
 
 export type RestaurantTableArgs = {
   tableNumber: number;
   qrCode: string;
+  status?: TableStatus;
 };
 
 export const createOneRestaurantTable = async (
@@ -42,7 +44,7 @@ export const updateOneRestaurantTable = async (
   id: number,
   restaurantTableData: RestaurantTableArgs,
 ) => {
-  const { tableNumber, qrCode } = restaurantTableData;
+  const { tableNumber, qrCode, status } = restaurantTableData;
 
   const existingTable = await prisma.restaurantTable.findFirst({
     where: {
@@ -69,6 +71,7 @@ export const updateOneRestaurantTable = async (
     data: {
       tableNumber,
       qrCode,
+      status,
     },
   });
 };
@@ -79,16 +82,16 @@ export const deleteOneRestaurantTable = async (id: number) => {
   });
 };
 
-// export const getOneProductOptionCategory = async (id: number) => {
-//   return prisma.productOptionCategory.findUnique({
-//     where: { id },
-//   });
-// };
+export const getOneRestaurantTable = async (id: number) => {
+  return prisma.restaurantTable.findUnique({
+    where: { id },
+  });
+};
 
-// export const getProductOptionCategoriesList = async () => {
-//   return prisma.productOptionCategory.findMany({
-//     orderBy: {
-//       id: "asc",
-//     },
-//   });
-// };
+export const getRestaurantTableList = async () => {
+  return prisma.restaurantTable.findMany({
+    orderBy: {
+      id: "asc",
+    },
+  });
+};
