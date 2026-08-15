@@ -30,6 +30,11 @@ import {
   getProductOptions,
   updateProductOption,
 } from "../../../controllers/admin/productOptionController";
+import {
+  createRestaurantTable,
+  deleteRestaurantTable,
+  updateRestaurantTable,
+} from "../../../controllers/admin/restaurantTableController";
 
 const router = express.Router();
 
@@ -56,9 +61,16 @@ router.delete("/product-option-categories", deleteProductOptionCategory);
 
 // CRUD for Product Option
 router.post("/product-option", createProductOption);
-router.get("/ ", auth, getProductOptions);
+router.get("/product-option", auth, getProductOptions);
 router.get("/product-option/:id", auth, getProductOption);
 router.patch("/product-option", updateProductOption);
 router.delete("/product-option", deleteProductOption);
+
+// CRUD for Restaurant Table
+router.post("/restaurant-table", createRestaurantTable);
+// router.get("/restaurant-table", auth, getProductOptions);
+// router.get("/restaurant-table/:id", auth, getProductOption);
+router.patch("/restaurant-table", updateRestaurantTable);
+router.delete("/restaurant-table", deleteRestaurantTable);
 
 export default router;
