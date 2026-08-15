@@ -26,6 +26,8 @@ import {
 import {
   createProductOption,
   deleteProductOption,
+  getProductOption,
+  getProductOptions,
   updateProductOption,
 } from "../../../controllers/admin/productOptionController";
 
@@ -54,8 +56,8 @@ router.delete("/product-option-categories", deleteProductOptionCategory);
 
 // CRUD for Product Option
 router.post("/product-option", createProductOption);
-// router.get("/product-option", auth, getProductOptionCategories);
-// router.get("/product-option/:id", auth, getProductOptionCategory);
+router.get("/ ", auth, getProductOptions);
+router.get("/product-option/:id", auth, getProductOption);
 router.patch("/product-option", updateProductOption);
 router.delete("/product-option", deleteProductOption);
 

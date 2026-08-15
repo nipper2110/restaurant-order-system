@@ -11,7 +11,11 @@ import {
 import {
   getProductOptionCategories,
   getProductOptionCategory,
-} from "../../../controllers/admin/productOptionCategoryController";
+} from "../../../controllers/api/productOptionCategoryController";
+import {
+  getProductOption,
+  getProductOptions,
+} from "../../../controllers/api/productOptionController";
 
 const router = express.Router();
 
@@ -26,5 +30,9 @@ router.get("/menu-items/:id", auth, getMenuItem);
 // For Product Option Category
 router.get("/product-option-categories", auth, getProductOptionCategories);
 router.get("/product-option-categories/:id", auth, getProductOptionCategory);
+
+// For Product Option
+router.get("/product-option", auth, getProductOptions);
+router.get("/product-option/:id", auth, getProductOption);
 
 export default router;

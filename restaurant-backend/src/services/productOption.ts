@@ -131,10 +131,6 @@ export const getOneProductOption = async (id: number) => {
   });
 };
 
-export const getProductOptionsList = async () => {
-  return prisma.productOption.findMany({
-    orderBy: {
-      id: "asc",
-    },
-  });
+export const getProductOptionsList = async (options: any) => {
+  return prisma.productOption.findMany(options);
 };
