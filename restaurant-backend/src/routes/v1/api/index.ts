@@ -16,6 +16,12 @@ import {
   getProductOptions,
 } from "../../../controllers/api/productOptionController";
 import { verifyRestaurantTable } from "../../../controllers/api/qrVerifyController";
+import {
+  createOrder,
+  getOrder,
+  getOrders,
+} from "../../../controllers/api/orderController";
+import { auth } from "../../../middlewares/auth";
 
 const router = express.Router();
 
@@ -32,10 +38,15 @@ router.get("/product-option-categories", getProductOptionCategories);
 router.get("/product-option-categories/:id", getProductOptionCategory);
 
 // For Product Option
-router.get("/product-option", getProductOptions);
-router.get("/product-option/:id", getProductOption);
+router.get("/product-options", getProductOptions);
+router.get("/product-options/:id", getProductOption);
 
 // For QR Verify
 router.get("/tables/qr-codes/verify/:token", verifyRestaurantTable);
+
+// For Order
+router.post("/orders", createOrder);
+router.get("/orders", getOrders);
+router.get("/orders/:id", auth, getOrder);
 
 export default router;

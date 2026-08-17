@@ -33,6 +33,19 @@ export const prisma = basePrisma.$extends({
       },
     },
 
+    order: {
+      createdAt: {
+        needs: { createdAt: true },
+        compute(menuItem) {
+          return menuItem?.createdAt.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+        },
+      },
+    },
+
     image: {
       path: {
         needs: {

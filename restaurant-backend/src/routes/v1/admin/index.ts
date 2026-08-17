@@ -37,6 +37,11 @@ import {
   getRestaurantTables,
   updateRestaurantTable,
 } from "../../../controllers/admin/restaurantTableController";
+import {
+  createOrder,
+  getOrder,
+  getOrders,
+} from "../../../controllers/admin/orderController";
 
 const router = express.Router();
 
@@ -62,17 +67,22 @@ router.patch("/product-option-categories", updateProductOptionCategory);
 router.delete("/product-option-categories", deleteProductOptionCategory);
 
 // CRUD for Product Option
-router.post("/product-option", createProductOption);
-router.get("/product-option", auth, getProductOptions);
-router.get("/product-option/:id", auth, getProductOption);
-router.patch("/product-option", updateProductOption);
-router.delete("/product-option", deleteProductOption);
+router.post("/product-options", createProductOption);
+router.get("/product-options", auth, getProductOptions);
+router.get("/product-options/:id", auth, getProductOption);
+router.patch("/product-options", updateProductOption);
+router.delete("/product-options", deleteProductOption);
 
 // CRUD for Restaurant Table
-router.post("/restaurant-table", createRestaurantTable);
-router.get("/restaurant-table", auth, getRestaurantTables);
-router.get("/restaurant-table/:id", auth, getRestaurantTable);
-router.patch("/restaurant-table", updateRestaurantTable);
-router.delete("/restaurant-table", deleteRestaurantTable);
+router.post("/restaurant-tables", createRestaurantTable);
+router.get("/restaurant-tables", auth, getRestaurantTables);
+router.get("/restaurant-tables/:id", auth, getRestaurantTable);
+router.patch("/restaurant-tables", updateRestaurantTable);
+router.delete("/restaurant-tables", deleteRestaurantTable);
+
+// For Order
+router.post("/orders", createOrder);
+router.get("/orders", getOrders);
+router.get("/orders/:id", getOrder);
 
 export default router;
