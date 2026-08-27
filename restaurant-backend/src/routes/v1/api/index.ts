@@ -22,6 +22,7 @@ import {
   getOrders,
 } from "../../../controllers/api/orderController";
 import { auth } from "../../../middlewares/auth";
+import { createOrderItem } from "../../../controllers/api/orderItemController";
 
 const router = express.Router();
 
@@ -48,5 +49,10 @@ router.get("/tables/qr-codes/verify/:token", verifyRestaurantTable);
 router.post("/orders", createOrder);
 router.get("/orders", getOrders);
 router.get("/orders/:id", auth, getOrder);
+
+// For Order Item
+router.post("/orders/items/:orderId", createOrderItem);
+// router.get("/orders-items", getOrders);
+// router.get("/orders-items/:id", auth, getOrder);
 
 export default router;

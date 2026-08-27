@@ -13,4 +13,5 @@ export const errorCode = {
   forbidden: "Error_Forbidden",
   productOptionExist: "Error_ProductOptionExist",
   productOptionCategoryExist: "Error_ProductOptionCategoryExist",
+  notFound: "Error_NotFound",
 };
