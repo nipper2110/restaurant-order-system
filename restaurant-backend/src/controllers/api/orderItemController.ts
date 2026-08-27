@@ -8,6 +8,8 @@ import { checkUserIfNotExist } from "../../utils/auth";
 import {
   createOneOrderItem,
   createOrderItemArgs,
+  updateOneOrderItem,
+  updateOrderItemArgs,
 } from "../../services/orderItemService";
 import CacheQueue from "../../jobs/queues/cacheQueue";
 
@@ -62,6 +64,53 @@ export const createOrderItem = [
     res.status(201).json({
       message: "Successfully created a new order.",
       orderItem,
+    });
+  },
+];
+
+export const updateOrderItem = [
+  param("id", "Order item ID is required.").isInt({ min: 1 }),
+  body("quantity", "Quantity must be at least 1.").isInt({ min: 1 }).optional(),
+  body("note", "Note must be a string with a maximum length of 255 characters.")
+    .isString()
+    .isLength({ max: 255 })
+    .optional(),
+  body("productOptionId", "Invalid product option ID.")
+    .isInt({ min: 1 })
+    .optional(),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const id = Number(req.params.id);
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
+
+    const { quantity, note, productOptionId } = req.body;
+
+    const data: updateOrderItemArgs = {
+      id,
+      quantity,
+      note,
+      productOptionId,
+    };
+
+    const updatedItem = await updateOneOrderItem(id, data);
+
+    await CacheQueue.add(
+      "invalidate-order-item-cache",
+      {
+        pattern: "orderItems:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    res.status(200).json({
+      message: "Successfully updated order item.",
+      orderItem: updatedItem,
     });
   },
 ];

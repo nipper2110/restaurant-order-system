@@ -22,7 +22,10 @@ import {
   getOrders,
 } from "../../../controllers/api/orderController";
 import { auth } from "../../../middlewares/auth";
-import { createOrderItem } from "../../../controllers/api/orderItemController";
+import {
+  createOrderItem,
+  updateOrderItem,
+} from "../../../controllers/api/orderItemController";
 
 const router = express.Router();
 
@@ -52,6 +55,7 @@ router.get("/orders/:id", auth, getOrder);
 
 // For Order Item
 router.post("/orders/items/:orderId", createOrderItem);
+router.patch("/orders/items/:id", updateOrderItem);
 // router.get("/orders-items", getOrders);
 // router.get("/orders-items/:id", auth, getOrder);
 
