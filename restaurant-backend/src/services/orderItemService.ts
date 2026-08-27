@@ -106,3 +106,17 @@ export const updateOneOrderItem = async (
     },
   });
 };
+
+export const deleteOneOrderItem = async (id: number) => {
+  const existingItem = await prisma.orderItem.findUnique({
+    where: { id },
+  });
+
+  if (!existingItem) {
+    throw createError("Order item not found.", 404, errorCode.notFound);
+  }
+
+  return await prisma.orderItem.delete({
+    where: { id },
+  });
+};

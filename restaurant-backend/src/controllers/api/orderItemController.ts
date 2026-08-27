@@ -8,6 +8,7 @@ import { checkUserIfNotExist } from "../../utils/auth";
 import {
   createOneOrderItem,
   createOrderItemArgs,
+  deleteOneOrderItem,
   updateOneOrderItem,
   updateOrderItemArgs,
 } from "../../services/orderItemService";
@@ -111,6 +112,35 @@ export const updateOrderItem = [
     res.status(200).json({
       message: "Successfully updated order item.",
       orderItem: updatedItem,
+    });
+  },
+];
+
+export const deleteOrderItem = [
+  param("id", "Order item ID is required.").isInt({ min: 1 }),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const id = Number(req.params.id);
+    const userId = req.userId;
+    const user = await getUserById(userId!);
+    checkUserIfNotExist(user);
+
+    await deleteOneOrderItem(id);
+
+    await CacheQueue.add(
+      "invalidate-order-item-cache",
+      {
+        pattern: "orderItems:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    res.status(200).json({
+      message: "Successfully deleted order item.",
     });
   },
 ];

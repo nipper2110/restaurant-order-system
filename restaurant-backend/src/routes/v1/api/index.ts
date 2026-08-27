@@ -24,6 +24,7 @@ import {
 import { auth } from "../../../middlewares/auth";
 import {
   createOrderItem,
+  deleteOrderItem,
   updateOrderItem,
 } from "../../../controllers/api/orderItemController";
 
@@ -56,6 +57,7 @@ router.get("/orders/:id", auth, getOrder);
 // For Order Item
 router.post("/orders/items/:orderId", createOrderItem);
 router.patch("/orders/items/:id", updateOrderItem);
+router.delete("/orders/items/:id", deleteOrderItem);
 // router.get("/orders-items", getOrders);
 // router.get("/orders-items/:id", auth, getOrder);
 
