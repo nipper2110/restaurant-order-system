@@ -25,6 +25,9 @@ import { auth } from "../../../middlewares/auth";
 import {
   createOrderItem,
   deleteOrderItem,
+  getOrderItem,
+  getOrderItems,
+  // getOrderItems,
   updateOrderItem,
 } from "../../../controllers/api/orderItemController";
 
@@ -52,13 +55,13 @@ router.get("/tables/qr-codes/verify/:token", verifyRestaurantTable);
 // For Order
 router.post("/orders", createOrder);
 router.get("/orders", getOrders);
-router.get("/orders/:id", auth, getOrder);
+router.get("/orders/:id", getOrder);
 
 // For Order Item
 router.post("/orders/items/:orderId", createOrderItem);
 router.patch("/orders/items/:id", updateOrderItem);
 router.delete("/orders/items/:id", deleteOrderItem);
-// router.get("/orders-items", getOrders);
-// router.get("/orders-items/:id", auth, getOrder);
+router.get("/order-items/:orderId", getOrderItems);
+router.get("/order-item/:id", getOrderItem);
 
 export default router;

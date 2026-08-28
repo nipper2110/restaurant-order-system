@@ -1,5 +1,5 @@
 import { errorCode } from "../../config/errorCode";
-import { prisma } from "../lib/prisma";
+import { prisma } from "./prismaClient";
 import { createError } from "../utils/error";
 import { Prisma } from "../generated/prisma/client";
 
@@ -9,6 +9,7 @@ export type createOrderItemArgs = {
   quantity: number;
   note?: string;
   productOptionId?: number;
+  tableId: number;
 };
 
 export type updateOrderItemArgs = {
@@ -16,6 +17,7 @@ export type updateOrderItemArgs = {
   quantity?: number;
   note?: string;
   productOptionId?: number;
+  tableId: number;
 };
 
 export const createOneOrderItem = async (data: createOrderItemArgs) => {
@@ -24,6 +26,14 @@ export const createOneOrderItem = async (data: createOrderItemArgs) => {
   });
   if (!existingOrder) {
     throw createError("Order not found.", 404, errorCode.notFound);
+  }
+
+  if (existingOrder.tableId !== data.tableId) {
+    throw createError(
+      "Unauthorized to add item to this order.",
+      403,
+      errorCode.forbidden,
+    );
   }
 
   const menuItem = await prisma.menuItem.findUnique({
@@ -49,7 +59,7 @@ export const createOneOrderItem = async (data: createOrderItemArgs) => {
   const basePrice = Number(menuItem.price) + optionPrice;
   const itemPrice = basePrice * data.quantity;
 
-  const calculatedPrice = Number(itemPrice);
+  const calculatedPrice = new Prisma.Decimal(itemPrice);
 
   return await prisma.orderItem.create({
     data: {
@@ -69,11 +79,19 @@ export const updateOneOrderItem = async (
 ) => {
   const existingItem = await prisma.orderItem.findUnique({
     where: { id },
-    include: { menuItem: true },
+    include: { menuItem: true, order: true },
   });
 
   if (!existingItem) {
     throw createError("Order item not found.", 404, errorCode.notFound);
+  }
+
+  if (existingItem.order.tableId !== data.tableId) {
+    throw createError(
+      "Unauthorized to update this order item.",
+      403,
+      errorCode.forbidden,
+    );
   }
 
   const quantity = data.quantity ?? existingItem.quantity;
@@ -107,16 +125,85 @@ export const updateOneOrderItem = async (
   });
 };
 
-export const deleteOneOrderItem = async (id: number) => {
+export const deleteOneOrderItem = async (id: number, tableId: number) => {
   const existingItem = await prisma.orderItem.findUnique({
     where: { id },
+    include: {
+      order: true,
+    },
   });
 
   if (!existingItem) {
     throw createError("Order item not found.", 404, errorCode.notFound);
   }
 
+  if (existingItem.order.tableId !== tableId) {
+    throw createError(
+      "Unauthorized to delete this order item.",
+      403,
+      errorCode.forbidden,
+    );
+  }
+
   return await prisma.orderItem.delete({
     where: { id },
+  });
+};
+
+export const getOneOrderItem = async (id: number, tableId: number) => {
+  const existingItem = await prisma.orderItem.findUnique({
+    where: { id },
+    include: {
+      order: true,
+    },
+  });
+
+  if (!existingItem) {
+    throw createError("Order item not found.", 404, errorCode.notFound);
+  }
+
+  if (existingItem.order.tableId !== tableId) {
+    throw createError(
+      "Unauthorized to get this order item.",
+      403,
+      errorCode.forbidden,
+    );
+  }
+
+  return prisma.orderItem.findUnique({
+    where: { id },
+    include: {
+      menuItem: true,
+      productOption: true,
+    },
+  });
+};
+
+export const getOrderItemList = async (orderId: number, tableId: number) => {
+  const existingOrder = await prisma.order.findUnique({
+    where: { id: orderId },
+  });
+
+  if (!existingOrder) {
+    throw createError("Order not found.", 404, errorCode.notFound);
+  }
+
+  if (existingOrder.tableId !== tableId) {
+    throw createError(
+      "Unauthorized to view this order.",
+      403,
+      errorCode.forbidden,
+    );
+  }
+
+  return prisma.orderItem.findMany({
+    where: { orderId },
+    include: {
+      menuItem: true,
+      productOption: true,
+    },
+    orderBy: {
+      id: "desc",
+    },
   });
 };
