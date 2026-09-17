@@ -1,5 +1,5 @@
 import api from "@/api/index";
-import type { Category } from "@/types";
+import type { Category, MenuItem } from "@/types";
 
 export const getCategories = async (): Promise<Category[]> => {
   const { data } = await api.get("/admins/categories");
@@ -41,6 +41,60 @@ export const createMenuItem = async (
     headers: { "Content-Type": undefined },
   });
   return data.menuItemId;
+};
+
+export const getMenuItems = async (limit = 100): Promise<MenuItem[]> => {
+  const { data } = await api.get("/admins/menu-items", { params: { limit } });
+  return data.menuItems;
+};
+
+export const getMenuItem = async (id: number): Promise<MenuItem> => {
+  const { data } = await api.get(`/admins/menu-items/${id}`);
+  return data.menuItem;
+};
+
+export interface UpdateMenuItemPayload {
+  menuItemId: number;
+  name: string;
+  description: string;
+  price: string;
+  isAvailable: boolean;
+  category: string;
+  image?: File | null;
+}
+
+export const updateMenuItem = async (
+  payload: UpdateMenuItemPayload,
+): Promise<number> => {
+  if (payload.image) {
+    const formData = new FormData();
+    formData.append("menuItemId", String(payload.menuItemId));
+    formData.append("name", payload.name);
+    formData.append("description", payload.description);
+    formData.append("price", payload.price);
+    formData.append("isAvailable", String(payload.isAvailable));
+    formData.append("category", payload.category);
+    formData.append("image", payload.image);
+
+    const { data } = await api.patch("/admins/menu-items", formData, {
+      headers: { "Content-Type": undefined },
+    });
+    return data.menuItemId;
+  }
+
+  const { data } = await api.patch("/admins/menu-items", {
+    menuItemId: payload.menuItemId,
+    name: payload.name,
+    description: payload.description,
+    price: payload.price,
+    isAvailable: payload.isAvailable,
+    category: payload.category,
+  });
+  return data.menuItemId;
+};
+
+export const deleteMenuItem = async (menuItemId: number): Promise<void> => {
+  await api.delete("/admins/menu-items", { data: { menuItemId } });
 };
 
 export const createProductOptionCategory = async (

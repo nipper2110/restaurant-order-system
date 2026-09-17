@@ -3,6 +3,20 @@ export interface Category {
   name: string;
 }
 
+export interface MenuItem {
+  id: number;
+  name: string;
+  description: string;
+  price: string;
+  isAvailable: boolean;
+  image: string;
+  createdAt?: string;
+  updatedAt?: string;
+  category: {
+    name: string;
+  };
+}
+
 export interface DashboardStats {
   totalOrdersToday: number;
   totalRevenueToday: number;
