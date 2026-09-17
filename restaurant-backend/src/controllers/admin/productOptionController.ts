@@ -37,10 +37,9 @@ export const createProductOption = [
     .optional({ values: "falsy" })
     .isFloat({ min: 0 })
     .toFloat(),
-  body("productOptionCategory", "Invalid product option category.")
-    .notEmpty()
-    .trim()
-    .escape(),
+  body("productOptionCategoryId", "Invalid product option category.").isInt({
+    min: 1,
+  }),
 
   async (req: Request, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
@@ -48,17 +47,17 @@ export const createProductOption = [
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
 
-    const { name, additionalPrice, productOptionCategory } = req.body;
+    const { name, additionalPrice, productOptionCategoryId } = req.body;
 
     const existingCategory = await getProductOptionByName(
-      productOptionCategory,
+      +productOptionCategoryId,
       name,
     );
     checkCategoryExist(existingCategory);
 
     const data: ProductOptionArgs = {
       name,
-      productOptionCategory,
+      productOptionCategoryId: +productOptionCategoryId,
     };
 
     if (additionalPrice !== undefined && additionalPrice !== "") {
@@ -92,18 +91,21 @@ export const updateProductOption = [
     .optional({ values: "falsy" })
     .isFloat({ min: 0 })
     .toFloat(),
-  body("productOptionCategory", "Invalid product option category.")
-    .notEmpty()
-    .trim()
-    .escape(),
+  body("productOptionCategoryId", "Invalid product option category.").isInt({
+    min: 1,
+  }),
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
 
-    const { productOptionId, name, additionalPrice, productOptionCategory } =
-      req.body;
+    const {
+      productOptionId,
+      name,
+      additionalPrice,
+      productOptionCategoryId,
+    } = req.body;
 
     const productOption = await getProductOptionById(+productOptionId);
     if (!productOption) {
@@ -115,7 +117,7 @@ export const updateProductOption = [
     const data: any = {
       name,
       additionalPrice,
-      productOptionCategory,
+      productOptionCategoryId: +productOptionCategoryId,
     };
 
     const productOptionUpdated = await updateOneProductOption(

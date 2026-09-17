@@ -102,3 +102,7 @@ export const getOneMenuItem = async (id: number) => {
 export const getMenuItemList = async (options: any) => {
   return prisma.menuItem.findMany(options);
 };
+
+export const getMenuItemCount = async () => {
+  return prisma.menuItem.count();
+};

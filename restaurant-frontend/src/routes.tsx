@@ -4,9 +4,15 @@ import RootLayout from "@/pages/RootLayout";
 import DashboardPage from "@/pages/Dashboard";
 import OrdersPage from "@/pages/Orders";
 import MenuItemsPage from "@/pages/MenuItems";
+import LoginPage from "@/pages/Login";
 import ErrorPage from "@/pages/Error";
 
 export const router = createBrowserRouter([
+  {
+    path: "/login",
+    Component: LoginPage,
+    ErrorBoundary: ErrorPage,
+  },
   {
     path: "/",
     Component: RootLayout,

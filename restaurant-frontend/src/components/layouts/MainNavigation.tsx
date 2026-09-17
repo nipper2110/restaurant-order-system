@@ -1,8 +1,9 @@
 import { Icons } from "@/components/icons";
 import { siteConfig } from "@/config/site";
-import { NavLink } from "react-router";
+import { NavLink, useNavigate } from "react-router";
 import GustoLogo from "@/assets/Gusto.png";
 import { useState } from "react";
+import { authApi } from "@/api";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Icons.dashboard },
@@ -12,6 +13,15 @@ const navItems = [
 
 function MainNavigation() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await authApi.post("/logout");
+    } finally {
+      navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <>
@@ -97,7 +107,10 @@ function MainNavigation() {
           </div>
 
           <div className="mt-4">
-            <button className="flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-white/65 hover:bg-white/10 hover:text-white">
+            <button
+              onClick={handleLogout}
+              className="flex h-11 w-full items-center gap-3 rounded-lg px-4 text-sm font-medium text-white/65 hover:bg-white/10 hover:text-white"
+            >
               <Icons.logout className="h-4 w-4" />
               <span>Logout</span>
             </button>

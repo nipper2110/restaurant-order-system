@@ -95,3 +95,12 @@ export const getRestaurantTableList = async () => {
     },
   });
 };
+
+export const getTableCounts = async () => {
+  const total = await prisma.restaurantTable.count();
+  const occupied = await prisma.restaurantTable.count({
+    where: { status: TableStatus.OCCUPIED },
+  });
+
+  return { total, occupied };
+};

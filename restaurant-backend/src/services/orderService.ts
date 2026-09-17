@@ -36,3 +36,27 @@ export const getOneOrder = async (id: number) => {
 export const getOrderList = async (options: any) => {
   return prisma.order.findMany(options);
 };
+
+export const getTodayOrderStats = async () => {
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const result = await prisma.order.aggregate({
+    where: {
+      createdAt: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+    _count: { id: true },
+    _sum: { totalPrice: true },
+  });
+
+  return {
+    totalOrders: result._count.id,
+    totalRevenue: Number(result._sum.totalPrice) || 0,
+  };
+};

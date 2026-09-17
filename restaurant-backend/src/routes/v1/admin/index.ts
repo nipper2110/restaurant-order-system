@@ -42,6 +42,7 @@ import {
   getOrder,
   getOrders,
 } from "../../../controllers/admin/orderController";
+import { getDashboardStats } from "../../../controllers/admin/dashboardController";
 
 const router = express.Router();
 
@@ -84,5 +85,8 @@ router.delete("/restaurant-tables", deleteRestaurantTable);
 router.post("/orders", createOrder);
 router.get("/orders", getOrders);
 router.get("/orders/:id", getOrder);
+
+// Dashboard
+router.get("/dashboard/stats", getDashboardStats);
 
 export default router;

@@ -5,14 +5,14 @@ import { createError } from "../utils/error";
 export type ProductOptionArgs = {
   name: string;
   additionalPrice?: number;
-  productOptionCategory: string;
+  productOptionCategoryId: number;
 };
 
 export const createOneProductOption = async (
   productOptionData: ProductOptionArgs,
 ) => {
-  const category = await prisma.productOptionCategory.findFirst({
-    where: { name: productOptionData.productOptionCategory },
+  const category = await prisma.productOptionCategory.findUnique({
+    where: { id: productOptionData.productOptionCategoryId },
   });
 
   if (!category) {
@@ -39,12 +39,14 @@ export const createOneProductOption = async (
 };
 
 export const getProductOptionByName = async (
-  productOptionCategoryName: string,
+  productOptionCategoryId: number,
   productOptionName: string,
 ) => {
-  const productOptionCategory = await prisma.productOptionCategory.findFirst({
-    where: { name: productOptionCategoryName },
-  });
+  const productOptionCategory = await prisma.productOptionCategory.findUnique(
+    {
+      where: { id: productOptionCategoryId },
+    },
+  );
 
   if (!productOptionCategory) {
     throw createError(
@@ -74,8 +76,8 @@ export const updateOneProductOption = async (
   id: number,
   Data: ProductOptionArgs,
 ) => {
-  const category = await prisma.productOptionCategory.findFirst({
-    where: { name: Data.productOptionCategory },
+  const category = await prisma.productOptionCategory.findUnique({
+    where: { id: Data.productOptionCategoryId },
   });
 
   if (!category) {

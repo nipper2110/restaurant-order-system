@@ -136,6 +136,19 @@ export const createMenuItem = [
         },
       );
 
+      // createOneMenuItem connects-or-creates the category, so a brand new
+      // category may have just been added — the categories cache can go stale.
+      await CacheQueue.add(
+        "invalidate-category-cache",
+        {
+          pattern: "categories:*",
+        },
+        {
+          jobId: `invalidate-${Date.now()}-categories`,
+          priority: 1,
+        },
+      );
+
       res.status(201).json({
         message: "Successfully created a new menu item.",
         menuItemId: menuItem.id,
@@ -245,6 +258,18 @@ export const updateMenuItem = [
         },
         {
           jobId: `invalidate-${Date.now()}`,
+          priority: 1,
+        },
+      );
+
+      // updateOneMenuItem connects-or-creates the category too.
+      await CacheQueue.add(
+        "invalidate-category-cache",
+        {
+          pattern: "categories:*",
+        },
+        {
+          jobId: `invalidate-${Date.now()}-categories`,
           priority: 1,
         },
       );

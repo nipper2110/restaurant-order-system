@@ -15,7 +15,11 @@ import routes from "./routes/v1";
 
 export const app = express();
 
-var whitelist = ["http://example1.com", "http://localhost:5173"];
+var whitelist = [
+  "http://example1.com",
+  "http://localhost:5173",
+  "http://localhost:5177",
+];
 var corsOptions = {
   origin: function (
     origin: any,

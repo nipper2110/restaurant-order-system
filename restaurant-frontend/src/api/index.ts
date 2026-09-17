@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -25,5 +25,12 @@ export const authApi = axios.create({
   },
   withCredentials: true,
 });
+
+export const getErrorMessage = (error: unknown, fallback: string) => {
+  if (isAxiosError(error) && typeof error.response?.data?.message === "string") {
+    return error.response.data.message;
+  }
+  return fallback;
+};
 
 export default api;

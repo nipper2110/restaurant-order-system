@@ -49,3 +49,7 @@ export const getOneCategory = async (id: number) => {
 export const getCategoriesList = async () => {
   return prisma.category.findMany();
 };
+
+export const getCategoryCount = async () => {
+  return prisma.category.count();
+};
