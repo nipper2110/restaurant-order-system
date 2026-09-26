@@ -1,16 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { Plus, ShoppingBag } from "lucide-react";
 
 import { getErrorMessage } from "@/api";
-import {
-  addOrderItem,
-  getMenuItems,
-  getOrder,
-  verifyTable,
-  type TableSession,
-} from "@/api/customer";
-import type { MenuItem, OrderDetail } from "@/types";
+import { getMenuItems, verifyTable, type TableSession } from "@/api/customer";
+import type { MenuItem } from "@/types";
+import { useCart } from "./cartContextStore";
 
 function formatCurrency(value: string | number) {
   return `฿${Number(value).toLocaleString()}`;
@@ -22,6 +17,8 @@ function imageUrl(path: string) {
 
 function TableMenu() {
   const { qrToken } = useParams<{ qrToken: string }>();
+  const navigate = useNavigate();
+  const cart = useCart();
 
   const [session, setSession] = useState<TableSession | null>(null);
   const [isVerifying, setIsVerifying] = useState(true);
@@ -31,10 +28,6 @@ function TableMenu() {
   const [isLoadingMenu, setIsLoadingMenu] = useState(true);
   const [menuError, setMenuError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-
-  const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [addingId, setAddingId] = useState<number | null>(null);
-  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!qrToken) return;
@@ -63,14 +56,10 @@ function TableMenu() {
     if (!session) return;
     let isMounted = true;
 
-    Promise.all([
-      getMenuItems(),
-      getOrder(session.orderId, session.tableId),
-    ])
-      .then(([items, orderData]) => {
+    getMenuItems()
+      .then((items) => {
         if (!isMounted) return;
         setMenuItems(items);
-        setOrder(orderData);
       })
       .catch((err) => {
         if (isMounted)
@@ -103,24 +92,9 @@ function TableMenu() {
     ? [activeCategory]
     : categoryNames;
 
-  const handleAddItem = async (item: MenuItem) => {
-    if (!session) return;
-
-    setAddError(null);
-    setAddingId(item.id);
-    try {
-      await addOrderItem(session.orderId, {
-        tableId: session.tableId,
-        menuItemId: item.id,
-        quantity: 1,
-      });
-      const updatedOrder = await getOrder(session.orderId, session.tableId);
-      setOrder(updatedOrder);
-    } catch (err) {
-      setAddError(getErrorMessage(err, "Failed to add item to your order."));
-    } finally {
-      setAddingId(null);
-    }
+  const handleOpenItem = (item: MenuItem) => {
+    if (!item.isAvailable) return;
+    navigate(`/order/${qrToken}/items/${item.id}`);
   };
 
   if (isVerifying) {
@@ -155,12 +129,6 @@ function TableMenu() {
           Browse the menu and tap + to add items to your order.
         </p>
       </div>
-
-      {addError && (
-        <div className="mb-4 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
-          {addError}
-        </div>
-      )}
 
       {isLoadingMenu ? (
         <p className="py-10 text-center text-sm text-white/40">
@@ -212,7 +180,12 @@ function TableMenu() {
                   {groupedItems.get(categoryName)!.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1a1a1a] p-3"
+                      onClick={() => handleOpenItem(item)}
+                      className={`flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1a1a1a] p-3 ${
+                        item.isAvailable
+                          ? "cursor-pointer active:opacity-80"
+                          : "opacity-50"
+                      }`}
                     >
                       <img
                         src={imageUrl(item.image)}
@@ -238,8 +211,11 @@ function TableMenu() {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleAddItem(item)}
-                        disabled={!item.isAvailable || addingId === item.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenItem(item);
+                        }}
+                        disabled={!item.isAvailable}
                         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fbbf24] text-black disabled:opacity-30"
                       >
                         <Plus className="h-4 w-4" />
@@ -253,17 +229,19 @@ function TableMenu() {
         </>
       )}
 
-      {order && order.orderItems.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center justify-between border-t border-white/10 bg-[#1a1a1a] px-4 py-3.5">
+      {cart.count > 0 && (
+        <button
+          onClick={() => navigate(`/order/${qrToken}/cart`)}
+          className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center justify-between border-t border-white/10 bg-[#1a1a1a] px-4 py-3.5"
+        >
           <span className="flex items-center gap-2 text-sm text-white/70">
             <ShoppingBag className="h-4 w-4 text-[#fbbf24]" />
-            {order.orderItems.length}{" "}
-            {order.orderItems.length === 1 ? "item" : "items"}
+            {cart.count} {cart.count === 1 ? "item" : "items"} in cart
           </span>
           <span className="text-base font-semibold text-[#fbbf24] tabular-nums">
-            {formatCurrency(order.totalPrice)}
+            {formatCurrency(cart.subtotal)}
           </span>
-        </div>
+        </button>
       )}
     </div>
   );

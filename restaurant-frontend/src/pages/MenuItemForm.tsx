@@ -7,17 +7,21 @@ import { Switch } from "@/components/ui/switch";
 import FoodImageUpload from "@/components/menu-items/FoodImageUpload";
 import CategoriesPanel from "@/components/menu-items/CategoriesPanel";
 import ProductOptionsSection from "@/components/menu-items/ProductOptionsSection";
-import type { DraftOptionGroup } from "@/components/menu-items/types";
+import { createId, type DraftOptionGroup } from "@/components/menu-items/types";
 import { getErrorMessage } from "@/api";
 import {
   createCategory,
   createMenuItem,
   createProductOption,
   createProductOptionCategory,
+  deleteProductOption,
+  deleteProductOptionCategory,
   getCategories,
   getMenuItem,
   updateCategory,
   updateMenuItem,
+  updateProductOption,
+  updateProductOptionCategory,
 } from "@/api/menuItems";
 import type { Category } from "@/types";
 
@@ -84,6 +88,22 @@ function MenuItemForm() {
         setCategory(item.category.name);
         setIsAvailable(item.isAvailable);
         setImagePreviewUrl(`${import.meta.env.VITE_IMG_URL}${item.image}`);
+        setOptionGroups(
+          item.productOptionCategory.map((group) => ({
+            id: createId(),
+            name: group.name,
+            isRequired: group.isRequired,
+            isEditing: false,
+            persistedId: group.id,
+            options: group.options.map((option) => ({
+              id: createId(),
+              name: option.name,
+              additionalPrice: option.additionalPrice,
+              isEditing: false,
+              persistedId: option.id,
+            })),
+          })),
+        );
       })
       .catch((err) => {
         if (isMounted)
@@ -187,13 +207,19 @@ function MenuItemForm() {
 
       const validGroups = optionGroups.filter((g) => g.name.trim());
       for (const group of validGroups) {
-        const groupId = await createProductOptionCategory(
-          group.name.trim(),
-          group.isRequired,
-          name.trim(),
-        );
+        // Groups loaded from an existing menu item already exist in the
+        // database — only create ones added in this session.
+        const groupId =
+          group.persistedId ??
+          (await createProductOptionCategory(
+            group.name.trim(),
+            group.isRequired,
+            name.trim(),
+          ));
 
-        const validOptions = group.options.filter((o) => o.name.trim());
+        const validOptions = group.options.filter(
+          (o) => o.name.trim() && !o.persistedId,
+        );
         for (const option of validOptions) {
           await createProductOption(
             option.name.trim(),
@@ -362,15 +388,20 @@ function MenuItemForm() {
           </div>
 
           <div>
-            {isEditMode && (
-              <p className="mb-3 text-xs text-white/40">
-                Existing option groups for this item aren't listed here yet —
-                anything added below creates new groups.
-              </p>
-            )}
             <ProductOptionsSection
               groups={optionGroups}
               onChange={setOptionGroups}
+              onUpdateGroup={(categoryId, groupName, isRequired) =>
+                updateProductOptionCategory(
+                  categoryId,
+                  groupName,
+                  isRequired,
+                  name.trim(),
+                )
+              }
+              onDeleteGroup={deleteProductOptionCategory}
+              onUpdateOption={updateProductOption}
+              onDeleteOption={deleteProductOption}
             />
           </div>
         </div>

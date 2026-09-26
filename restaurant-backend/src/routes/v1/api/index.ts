@@ -23,6 +23,7 @@ import {
 } from "../../../controllers/api/orderController";
 import { auth } from "../../../middlewares/auth";
 import {
+  confirmOrder,
   createOrderItem,
   deleteOrderItem,
   getOrderItem,
@@ -58,6 +59,7 @@ router.get("/orders", getOrders);
 router.get("/orders/:id", getOrder);
 
 // For Order Item
+router.post("/orders/:orderId/confirm", confirmOrder);
 router.post("/orders/items/:orderId", createOrderItem);
 router.patch("/orders/items/:id", updateOrderItem);
 router.delete("/orders/items/:id", deleteOrderItem);

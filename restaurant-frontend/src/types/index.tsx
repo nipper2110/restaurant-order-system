@@ -17,6 +17,23 @@ export interface MenuItem {
   };
 }
 
+export interface ProductOption {
+  id: number;
+  name: string;
+  additionalPrice: string;
+}
+
+export interface ProductOptionCategory {
+  id: number;
+  name: string;
+  isRequired: boolean;
+  options: ProductOption[];
+}
+
+export interface MenuItemDetail extends MenuItem {
+  productOptionCategory: ProductOptionCategory[];
+}
+
 export interface DashboardStats {
   totalOrdersToday: number;
   totalRevenueToday: number;
@@ -33,7 +50,7 @@ export interface OrderItem {
   note: string | null;
   menuItemId: number;
   orderId: number;
-  productOptionId: number | null;
+  productOptionIds: number[];
 }
 
 export type TableStatusValue = "AVAILABLE" | "OCCUPIED";
@@ -63,17 +80,20 @@ export interface OrderItemDetail {
   quantity: number;
   price: string;
   note: string | null;
+  batchNumber: number;
+  createdAt: string;
   menuItem: {
     id: number;
     name: string;
   };
-  productOption: {
+  productOptions: {
     id: number;
     name: string;
+    additionalPrice: string;
     productOptionCategory: {
       name: string;
     };
-  } | null;
+  }[];
 }
 
 export interface OrderDetail {

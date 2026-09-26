@@ -3,6 +3,7 @@ import { body, param, query, validationResult } from "express-validator";
 import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
 import {
+  confirmOrderItems,
   createOneOrderItem,
   createOrderItemArgs,
   deleteOneOrderItem,
@@ -24,9 +25,10 @@ export const createOrderItem = [
   body("tableId", "Table ID is required.").isInt({ min: 1 }),
   body("menuItemId", "Menu item id is required").isInt({ min: 1 }),
   body("quantity", "Quantity must be at least 1").isInt({ min: 1 }),
-  body("productOptionId", "Invalid product option ID.")
-    .isInt({ min: 1 })
+  body("productOptionIds", "Product option IDs must be an array.")
+    .isArray()
     .optional(),
+  body("productOptionIds.*", "Invalid product option ID.").isInt({ min: 1 }),
   body("note", "Note must be a string with a maximum length of 255 characters.")
     .isString()
     .isLength({ max: 255 })
@@ -39,13 +41,14 @@ export const createOrderItem = [
     }
 
     const orderId = Number(req.params.orderId);
-    const { menuItemId, quantity, note, productOptionId, tableId } = req.body;
+    const { menuItemId, quantity, note, productOptionIds, tableId } =
+      req.body;
 
     const data: createOrderItemArgs = {
       orderId,
       menuItemId,
       quantity,
-      productOptionId,
+      productOptionIds,
       note,
       tableId,
     };
@@ -76,6 +79,53 @@ export const createOrderItem = [
   },
 ];
 
+export const confirmOrder = [
+  param("orderId", "Order id is required").isInt({ min: 1 }),
+  body("tableId", "Table ID is required.").isInt({ min: 1 }),
+  body("items", "At least one item is required.").isArray({ min: 1 }),
+  body("items.*.menuItemId", "Menu item id is required").isInt({ min: 1 }),
+  body("items.*.quantity", "Quantity must be at least 1").isInt({ min: 1 }),
+  body("items.*.productOptionIds", "Product option IDs must be an array.")
+    .isArray()
+    .optional(),
+  body(
+    "items.*.note",
+    "Note must be a string with a maximum length of 255 characters.",
+  )
+    .isString()
+    .isLength({ max: 255 })
+    .optional(),
+
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const orderId = Number(req.params.orderId);
+    const { tableId, items } = req.body;
+
+    const result = await confirmOrderItems(orderId, tableId, items);
+
+    await CacheQueue.add(
+      "invalidate-order-item-cache",
+      { pattern: "orderItems:*" },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+    await CacheQueue.add(
+      "invalidate-order-cache",
+      { pattern: "orders:*" },
+      { jobId: `invalidate-${Date.now()}-order`, priority: 1 },
+    );
+
+    res.status(201).json({
+      message: "Successfully confirmed the order.",
+      batchNumber: result.batchNumber,
+      items: result.items,
+    });
+  },
+];
+
 export const updateOrderItem = [
   param("id", "Order item ID is required.").isInt({ min: 1 }),
   body("tableId", "Table ID is required.").isInt({ min: 1 }),
@@ -84,9 +134,10 @@ export const updateOrderItem = [
     .isString()
     .isLength({ max: 255 })
     .optional(),
-  body("productOptionId", "Invalid product option ID.")
-    .isInt({ min: 1 })
+  body("productOptionIds", "Product option IDs must be an array.")
+    .isArray()
     .optional(),
+  body("productOptionIds.*", "Invalid product option ID.").isInt({ min: 1 }),
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
@@ -94,13 +145,13 @@ export const updateOrderItem = [
     }
 
     const id = Number(req.params.id);
-    const { quantity, note, productOptionId, tableId } = req.body;
+    const { quantity, note, productOptionIds, tableId } = req.body;
 
     const data: updateOrderItemArgs = {
       id,
       quantity,
       note,
-      productOptionId,
+      productOptionIds,
       tableId,
     };
 

@@ -1,5 +1,5 @@
 import api from "@/api/index";
-import type { Category, MenuItem } from "@/types";
+import type { Category, MenuItem, MenuItemDetail } from "@/types";
 
 export const getCategories = async (): Promise<Category[]> => {
   const { data } = await api.get("/admins/categories");
@@ -48,7 +48,7 @@ export const getMenuItems = async (limit = 100): Promise<MenuItem[]> => {
   return data.menuItems;
 };
 
-export const getMenuItem = async (id: number): Promise<MenuItem> => {
+export const getMenuItem = async (id: number): Promise<MenuItemDetail> => {
   const { data } = await api.get(`/admins/menu-items/${id}`);
   return data.menuItem;
 };
@@ -121,4 +121,44 @@ export const createProductOption = async (
     productOptionCategoryId,
   });
   return data.productOptionId;
+};
+
+export const updateProductOptionCategory = async (
+  categoryId: number,
+  name: string,
+  isRequired: boolean,
+  menuItem: string,
+) => {
+  await api.patch("/admins/product-option-categories", {
+    categoryId,
+    name,
+    isRequired,
+    menuItem,
+  });
+};
+
+export const deleteProductOptionCategory = async (categoryId: number) => {
+  await api.delete("/admins/product-option-categories", {
+    data: { categoryId },
+  });
+};
+
+export const updateProductOption = async (
+  productOptionId: number,
+  name: string,
+  additionalPrice: number | undefined,
+  productOptionCategoryId: number,
+) => {
+  await api.patch("/admins/product-options", {
+    productOptionId,
+    name,
+    additionalPrice,
+    productOptionCategoryId,
+  });
+};
+
+export const deleteProductOption = async (productOptionId: number) => {
+  await api.delete("/admins/product-options", {
+    data: { productOptionId },
+  });
 };

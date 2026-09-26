@@ -123,12 +123,18 @@ model OrderItem {
   price    Decimal @db.Decimal(10, 2)
   note     String? @db.VarChar(255)
 
+  // Items confirmed together in one "Confirm Order" action share the same
+  // batch number, so the customer's order history can group them as one
+  // round instead of a flat list, even though they all belong to the same
+  // table Order.
+  batchNumber Int      @default(1)
+  createdAt   DateTime @default(now())
+
   menuItemId Int
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
 
   orderId Int
   order   Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  productOptionId Int?
-  productOption   ProductOption? @relation(fields: [productOptionId], references: [id])
+  productOptions ProductOption[]
 }

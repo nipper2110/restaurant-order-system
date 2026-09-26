@@ -58,16 +58,19 @@ export const getOneOrder = async (id: number) => {
           quantity: true,
           price: true,
           note: true,
+          batchNumber: true,
+          createdAt: true,
           menuItem: {
             select: {
               id: true,
               name: true,
             },
           },
-          productOption: {
+          productOptions: {
             select: {
               id: true,
               name: true,
+              additionalPrice: true,
               productOptionCategory: {
                 select: {
                   name: true,
@@ -76,6 +79,7 @@ export const getOneOrder = async (id: number) => {
             },
           },
         },
+        orderBy: { id: "asc" },
       },
     },
   });

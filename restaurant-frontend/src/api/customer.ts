@@ -1,5 +1,11 @@
 import customerApi from "@/api/customerClient";
-import type { Category, MenuItem, OrderDetail, TableStatusValue } from "@/types";
+import type {
+  Category,
+  MenuItem,
+  MenuItemDetail,
+  OrderDetail,
+  TableStatusValue,
+} from "@/types";
 
 export interface TableSession {
   tableId: number;
@@ -27,6 +33,11 @@ export const getMenuItems = async (limit = 100): Promise<MenuItem[]> => {
   return data.menuItems;
 };
 
+export const getMenuItem = async (id: number): Promise<MenuItemDetail> => {
+  const { data } = await customerApi.get(`/users/menu-items/${id}`);
+  return data.menuItem;
+};
+
 export const getOrder = async (
   orderId: number,
   tableId: number,
@@ -37,20 +48,21 @@ export const getOrder = async (
   return data.order;
 };
 
-export interface AddOrderItemPayload {
-  tableId: number;
+export interface ConfirmOrderItemPayload {
   menuItemId: number;
   quantity: number;
   note?: string;
+  productOptionIds?: number[];
 }
 
-export const addOrderItem = async (
+export const confirmOrder = async (
   orderId: number,
-  payload: AddOrderItemPayload,
+  tableId: number,
+  items: ConfirmOrderItemPayload[],
 ) => {
-  const { data } = await customerApi.post(
-    `/users/orders/items/${orderId}`,
-    payload,
-  );
-  return data.orderItem;
+  const { data } = await customerApi.post(`/users/orders/${orderId}/confirm`, {
+    tableId,
+    items,
+  });
+  return data as { batchNumber: number };
 };

@@ -194,10 +194,7 @@ function Orders() {
   );
 
   const subtotal = selectedOrder
-    ? selectedOrder.orderItems.reduce(
-        (sum, item) => sum + item.quantity * Number(item.price),
-        0,
-      )
+    ? selectedOrder.orderItems.reduce((sum, item) => sum + Number(item.price), 0)
     : 0;
 
   return (
@@ -511,14 +508,12 @@ function Orders() {
                             {item.menuItem.name}
                           </p>
                           <p className="text-sm font-semibold text-white tabular-nums">
-                            {formatCurrency(
-                              item.quantity * Number(item.price),
-                            )}
+                            {formatCurrency(item.price)}
                           </p>
                         </div>
-                        {item.productOption && (
+                        {item.productOptions.length > 0 && (
                           <p className="text-xs text-white/40">
-                            {item.productOption.name}
+                            {item.productOptions.map((o) => o.name).join(", ")}
                           </p>
                         )}
                         {item.note && (

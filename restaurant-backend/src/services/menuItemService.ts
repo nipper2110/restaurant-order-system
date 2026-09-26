@@ -95,6 +95,20 @@ export const getOneMenuItem = async (id: number) => {
           name: true,
         },
       },
+      productOptionCategory: {
+        select: {
+          id: true,
+          name: true,
+          isRequired: true,
+          options: {
+            select: {
+              id: true,
+              name: true,
+              additionalPrice: true,
+            },
+          },
+        },
+      },
     },
   });
 };

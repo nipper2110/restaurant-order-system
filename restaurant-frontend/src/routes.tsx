@@ -9,6 +9,8 @@ import LoginPage from "@/pages/Login";
 import ErrorPage from "@/pages/Error";
 import CustomerLayout from "@/pages/customer/CustomerLayout";
 import TableMenuPage from "@/pages/customer/TableMenu";
+import ItemDetailPage from "@/pages/customer/ItemDetail";
+import CartPage from "@/pages/customer/Cart";
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +26,14 @@ export const router = createBrowserRouter([
       {
         index: true,
         Component: TableMenuPage,
+      },
+      {
+        path: "items/:itemId",
+        Component: ItemDetailPage,
+      },
+      {
+        path: "cart",
+        Component: CartPage,
       },
     ],
   },
