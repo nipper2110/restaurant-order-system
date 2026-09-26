@@ -56,6 +56,15 @@ export const createOrder = [
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
 
+    // A new order marks the table OCCUPIED — keep table/dashboard caches fresh.
+    await CacheQueue.add(
+      "invalidate-restaurant-table-cache",
+      {
+        pattern: "restaurantTables:*",
+      },
+      { jobId: `invalidate-${Date.now()}-tables`, priority: 1 },
+    );
+
     res.status(201).json({
       message: "Successfully created a new order.",
       orderId: order.id,

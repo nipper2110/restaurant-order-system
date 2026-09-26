@@ -2,6 +2,7 @@ import { errorCode } from "../../config/errorCode";
 import { prisma } from "./prismaClient";
 import { createError } from "../utils/error";
 import { Prisma } from "../generated/prisma/client";
+import { recalculateOrderTotal } from "./orderService";
 
 export type createOrderItemArgs = {
   orderId: number;
@@ -61,7 +62,7 @@ export const createOneOrderItem = async (data: createOrderItemArgs) => {
 
   const calculatedPrice = new Prisma.Decimal(itemPrice);
 
-  return await prisma.orderItem.create({
+  const orderItem = await prisma.orderItem.create({
     data: {
       orderId: data.orderId,
       menuItemId: data.menuItemId,
@@ -71,6 +72,10 @@ export const createOneOrderItem = async (data: createOrderItemArgs) => {
       productOptionId: data.productOptionId || null,
     },
   });
+
+  await recalculateOrderTotal(data.orderId);
+
+  return orderItem;
 };
 
 export const updateOneOrderItem = async (
@@ -114,7 +119,7 @@ export const updateOneOrderItem = async (
   const calculatedPrice = basePrice * quantity;
   const newPrice = new Prisma.Decimal(calculatedPrice);
 
-  return prisma.orderItem.update({
+  const updated = await prisma.orderItem.update({
     where: { id },
     data: {
       quantity: quantity,
@@ -123,6 +128,10 @@ export const updateOneOrderItem = async (
       productOptionId: productOptionId,
     },
   });
+
+  await recalculateOrderTotal(existingItem.orderId);
+
+  return updated;
 };
 
 export const deleteOneOrderItem = async (id: number, tableId: number) => {
@@ -145,9 +154,13 @@ export const deleteOneOrderItem = async (id: number, tableId: number) => {
     );
   }
 
-  return await prisma.orderItem.delete({
+  const deleted = await prisma.orderItem.delete({
     where: { id },
   });
+
+  await recalculateOrderTotal(existingItem.orderId);
+
+  return deleted;
 };
 
 export const getOneOrderItem = async (id: number, tableId: number) => {

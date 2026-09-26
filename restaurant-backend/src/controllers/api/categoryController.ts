@@ -2,8 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { body, param, validationResult } from "express-validator";
 import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 import {
   getCategoriesList,
@@ -25,10 +23,6 @@ export const getCategory = [
 
     const categoryId = Number(req.params.id);
 
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
-
     const cacheKey = `categories:${categoryId}`;
     const category = await getOrSetCache(cacheKey, async () => {
       return await getOneCategory(+categoryId);
@@ -46,10 +40,6 @@ export const getCategories = [
     if (errors.length > 0) {
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const cacheKey = "categories:all";
     const category = await getOrSetCache(cacheKey, async () => {

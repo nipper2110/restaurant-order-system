@@ -4,8 +4,6 @@ import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
 import CacheQueue from "../../jobs/queues/cacheQueue";
 import { checkModelIfNotExist } from "../../utils/check";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 import {
   createOneOrder,
@@ -56,6 +54,15 @@ export const createOrder = [
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
 
+    // A new order marks the table OCCUPIED — keep table/dashboard caches fresh.
+    await CacheQueue.add(
+      "invalidate-restaurant-table-cache",
+      {
+        pattern: "restaurantTables:*",
+      },
+      { jobId: `invalidate-${Date.now()}-tables`, priority: 1 },
+    );
+
     res.status(201).json({
       message: "Successfully created a new order.",
       orderId: order.id,
@@ -65,6 +72,7 @@ export const createOrder = [
 
 export const getOrder = [
   param("id", "Order ID is required.").isInt({ min: 1 }),
+  query("tableId", "Table ID is required.").isInt({ min: 1 }),
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
@@ -72,10 +80,7 @@ export const getOrder = [
     }
 
     const orderId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
+    const tableId = Number(req.query.tableId);
 
     const cacheKey = `orders:${orderId}`;
     const order = await getOrSetCache(cacheKey, async () => {
@@ -84,12 +89,23 @@ export const getOrder = [
 
     checkModelIfNotExist(order);
 
+    if (order.tableId !== tableId) {
+      return next(
+        createError(
+          "Unauthorized to view this order.",
+          403,
+          errorCode.forbidden,
+        ),
+      );
+    }
+
     res.status(200).json({ message: "Order Detail", order });
   },
 ];
 
 // // Cursor-based Pagination
 export const getOrders = [
+  query("tableId", "Table ID is required.").isInt({ min: 1 }),
   query("cursor", "Cursor must be Menu Item ID.").isInt({ gt: 0 }).optional(),
   query("limit", "Limit number must be unsigned integer.")
     .isInt({ gt: 2 })
@@ -103,17 +119,13 @@ export const getOrders = [
 
     const lastCursor = req.query.cursor;
     const limit = req.query.limit || 5;
-
-    const orderId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
+    const tableId = Number(req.query.tableId);
 
     const options = {
       take: +limit + 1,
       skip: lastCursor ? 1 : 0,
       cursor: lastCursor ? { id: +lastCursor } : undefined,
+      where: { tableId },
       select: {
         id: true,
         totalPrice: true,

@@ -3,8 +3,6 @@ import { param, validationResult } from "express-validator";
 import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
 import { checkCategoryIfNotExist } from "../../utils/category";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 import {
   getOneProductOptionCategory,
@@ -26,10 +24,6 @@ export const getProductOptionCategory = [
 
     const categoryId = Number(req.params.id);
 
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
-
     const cacheKey = `productOptionCategories:${categoryId}`;
     const category = await getOrSetCache(cacheKey, async () => {
       return await getOneProductOptionCategory(+categoryId);
@@ -49,10 +43,6 @@ export const getProductOptionCategories = [
     if (errors.length > 0) {
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const cacheKey = "productOptionCategories:all";
     const category = await getOrSetCache(cacheKey, async () => {

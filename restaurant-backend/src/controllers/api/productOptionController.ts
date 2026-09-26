@@ -2,8 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { param, query, validationResult } from "express-validator";
 import { createError } from "../../utils/error";
 import { errorCode } from "../../../config/errorCode";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 import {
   getOneProductOption,
@@ -25,10 +23,6 @@ export const getProductOption = [
     }
 
     const productOptionId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const cacheKey = `productOptions:${productOptionId}`;
     const productOption = await getOrSetCache(cacheKey, async () => {
@@ -56,12 +50,6 @@ export const getProductOptions = [
 
     const lastCursor = req.query.cursor;
     const limit = req.query.limit || 5;
-
-    const productOptionId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const options = {
       take: +limit + 1,

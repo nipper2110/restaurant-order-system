@@ -60,6 +60,15 @@ export const createOrderItem = [
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
 
+    // Adding/changing/removing an item changes the parent order's total.
+    await CacheQueue.add(
+      "invalidate-order-cache",
+      {
+        pattern: "orders:*",
+      },
+      { jobId: `invalidate-${Date.now()}-order`, priority: 1 },
+    );
+
     res.status(201).json({
       message: "Successfully created a new order item.",
       orderItem,
@@ -105,6 +114,15 @@ export const updateOrderItem = [
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
     );
 
+    // Adding/changing/removing an item changes the parent order's total.
+    await CacheQueue.add(
+      "invalidate-order-cache",
+      {
+        pattern: "orders:*",
+      },
+      { jobId: `invalidate-${Date.now()}-order`, priority: 1 },
+    );
+
     res.status(200).json({
       message: "Successfully updated order item.",
       orderItem: updatedItem,
@@ -132,6 +150,15 @@ export const deleteOrderItem = [
         pattern: "orderItems:*",
       },
       { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    // Adding/changing/removing an item changes the parent order's total.
+    await CacheQueue.add(
+      "invalidate-order-cache",
+      {
+        pattern: "orders:*",
+      },
+      { jobId: `invalidate-${Date.now()}-order`, priority: 1 },
     );
 
     res.status(200).json({

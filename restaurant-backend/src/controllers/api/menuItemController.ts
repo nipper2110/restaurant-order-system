@@ -8,8 +8,6 @@ import {
   getMenuItemList,
   getOneMenuItem,
 } from "../../services/menuItemService";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 
 interface CustomRequest extends Request {
@@ -28,10 +26,6 @@ export const getMenuItem = [
     }
 
     const menuItemId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const cacheKey = `menuItems:${menuItemId}`;
     const menuItem = await getOrSetCache(cacheKey, async () => {
@@ -59,12 +53,6 @@ export const getMenuItems = [
 
     const lastCursor = req.query.cursor;
     const limit = req.query.limit || 5;
-
-    const menuItemId = Number(req.params.id);
-
-    const userId = req.userId;
-    const user = await getUserById(userId!);
-    checkUserIfNotExist(user);
 
     const options = {
       take: +limit + 1,

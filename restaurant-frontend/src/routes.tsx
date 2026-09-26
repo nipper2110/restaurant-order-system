@@ -7,12 +7,25 @@ import MenuItemsPage from "@/pages/MenuItems";
 import MenuItemFormPage from "@/pages/MenuItemForm";
 import LoginPage from "@/pages/Login";
 import ErrorPage from "@/pages/Error";
+import CustomerLayout from "@/pages/customer/CustomerLayout";
+import TableMenuPage from "@/pages/customer/TableMenu";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
     Component: LoginPage,
     ErrorBoundary: ErrorPage,
+  },
+  {
+    path: "/order/:qrToken",
+    Component: CustomerLayout,
+    ErrorBoundary: ErrorPage,
+    children: [
+      {
+        index: true,
+        Component: TableMenuPage,
+      },
+    ],
   },
   {
     path: "/",

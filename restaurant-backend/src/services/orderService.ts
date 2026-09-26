@@ -1,6 +1,7 @@
 import { errorCode } from "../../config/errorCode";
 import { prisma } from "../lib/prisma";
 import { createError } from "../utils/error";
+import { TableStatus } from "../generated/prisma/enums";
 
 export type orderArgs = {
   tableId: number;
@@ -16,9 +17,18 @@ export const createOneOrder = async (orderData: orderArgs) => {
     throw createError("The table is not created yet.", 400, errorCode.invalid);
   }
 
-  return prisma.order.create({
+  const order = await prisma.order.create({
     data: { tableId: orderData.tableId, totalPrice: orderData.totalPrice || 0 },
   });
+
+  // A new order means the table is now in use — reflect that immediately
+  // so the admin dashboard shows accurate occupancy.
+  await prisma.restaurantTable.update({
+    where: { id: orderData.tableId },
+    data: { status: TableStatus.OCCUPIED },
+  });
+
+  return order;
 };
 
 export const getOrderByTableId = async (id: number) => {
@@ -73,6 +83,18 @@ export const getOneOrder = async (id: number) => {
 
 export const getOrderList = async (options: any) => {
   return prisma.order.findMany(options);
+};
+
+export const recalculateOrderTotal = async (orderId: number) => {
+  const result = await prisma.orderItem.aggregate({
+    where: { orderId },
+    _sum: { price: true },
+  });
+
+  return prisma.order.update({
+    where: { id: orderId },
+    data: { totalPrice: result._sum.price || 0 },
+  });
 };
 
 export const getTodayOrderStats = async () => {
