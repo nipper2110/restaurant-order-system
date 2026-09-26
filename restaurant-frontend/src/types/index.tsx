@@ -57,3 +57,34 @@ export interface Order {
   };
   orderItems: OrderItem[];
 }
+
+export interface OrderItemDetail {
+  id: number;
+  quantity: number;
+  price: string;
+  note: string | null;
+  menuItem: {
+    id: number;
+    name: string;
+  };
+  productOption: {
+    id: number;
+    name: string;
+    productOptionCategory: {
+      name: string;
+    };
+  } | null;
+}
+
+export interface OrderDetail {
+  id: number;
+  totalPrice: string;
+  createdAt: string;
+  tableId: number;
+  table: {
+    id: number;
+    tableNumber: number;
+    status: TableStatusValue;
+  };
+  orderItems: OrderItemDetail[];
+}

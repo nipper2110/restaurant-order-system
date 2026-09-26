@@ -15,11 +15,8 @@ import routes from "./routes/v1";
 
 export const app = express();
 
-var whitelist = [
-  "http://example1.com",
-  "http://localhost:5173",
-  "http://localhost:5177",
-];
+var whitelist = ["http://example1.com"];
+var localhostPattern = /^http:\/\/(localhost|127\.0\.0\.1):\d+$/;
 var corsOptions = {
   origin: function (
     origin: any,
@@ -28,7 +25,12 @@ var corsOptions = {
     // Allow requests with no origin (like mobile apps)
     if (!origin) return callback(null, true);
 
-    if (whitelist.includes(origin)) {
+    // Local Vite dev servers pick whatever port is free, so allow any
+    // localhost port in development instead of hardcoding one that drifts.
+    const isLocalDev =
+      process.env.NODE_ENV !== "production" && localhostPattern.test(origin);
+
+    if (whitelist.includes(origin) || isLocalDev) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

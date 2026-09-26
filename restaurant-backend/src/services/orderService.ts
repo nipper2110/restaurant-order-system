@@ -1,5 +1,5 @@
 import { errorCode } from "../../config/errorCode";
-import { prisma } from "./prismaClient";
+import { prisma } from "../lib/prisma";
 import { createError } from "../utils/error";
 
 export type orderArgs = {
@@ -30,6 +30,44 @@ export const getOrderByTableId = async (id: number) => {
 export const getOneOrder = async (id: number) => {
   return prisma.order.findUnique({
     where: { id },
+    select: {
+      id: true,
+      totalPrice: true,
+      createdAt: true,
+      tableId: true,
+      table: {
+        select: {
+          id: true,
+          tableNumber: true,
+          status: true,
+        },
+      },
+      orderItems: {
+        select: {
+          id: true,
+          quantity: true,
+          price: true,
+          note: true,
+          menuItem: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          productOption: {
+            select: {
+              id: true,
+              name: true,
+              productOptionCategory: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 };
 

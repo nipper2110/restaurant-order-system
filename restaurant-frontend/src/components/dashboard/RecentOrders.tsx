@@ -7,6 +7,16 @@ function formatCurrency(value: string) {
   return `฿${Number(value).toLocaleString()}`;
 }
 
+function formatDateTime(value: string) {
+  return new Date(value).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
 function RecentOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +105,7 @@ function RecentOrders() {
                     {formatCurrency(order.totalPrice)}
                   </td>
                   <td className="py-4 text-sm text-white/40">
-                    {order.createdAt}
+                    {formatDateTime(order.createdAt)}
                   </td>
                   <td className="py-4 text-right">
                     <Link
