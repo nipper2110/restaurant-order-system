@@ -135,6 +135,10 @@ model OrderItem {
   batchNumber Int      @default(1)
   createdAt   DateTime @default(now())
 
+  // Tracks kitchen/service progress so admins can see what's already
+  // reached the table vs. still pending.
+  isServed Boolean @default(false)
+
   menuItemId Int
   menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
 

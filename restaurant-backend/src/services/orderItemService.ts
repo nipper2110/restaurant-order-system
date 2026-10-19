@@ -21,6 +21,18 @@ export type updateOrderItemArgs = {
   tableId: number;
 };
 
+export const setOrderItemServed = async (id: number, isServed: boolean) => {
+  const existingItem = await prisma.orderItem.findUnique({ where: { id } });
+  if (!existingItem) {
+    throw createError("Order item not found.", 404, errorCode.notFound);
+  }
+
+  return prisma.orderItem.update({
+    where: { id },
+    data: { isServed },
+  });
+};
+
 // Validates the selected options belong to the given menu item, that each
 // option's category gets at most one selection (categories behave as
 // single-select groups), and that every required category has one, then

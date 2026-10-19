@@ -43,6 +43,7 @@ import {
   getOrder,
   getOrders,
 } from "../../../controllers/admin/orderController";
+import { updateOrderItemServedStatus } from "../../../controllers/admin/orderItemController";
 import { getDashboardStats } from "../../../controllers/admin/dashboardController";
 
 const router = express.Router();
@@ -87,6 +88,7 @@ router.post("/orders", createOrder);
 router.get("/orders", getOrders);
 router.get("/orders/:id", getOrder);
 router.post("/orders/:id/complete", completeOrder);
+router.patch("/order-items/:id/served", updateOrderItemServedStatus);
 
 // Dashboard
 router.get("/dashboard/stats", getDashboardStats);

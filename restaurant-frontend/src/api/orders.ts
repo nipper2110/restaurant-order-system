@@ -14,3 +14,10 @@ export const getOrder = async (id: number): Promise<OrderDetail> => {
 export const completeOrder = async (id: number): Promise<void> => {
   await api.post(`/admins/orders/${id}/complete`);
 };
+
+export const setOrderItemServed = async (
+  orderItemId: number,
+  isServed: boolean,
+): Promise<void> => {
+  await api.patch(`/admins/order-items/${orderItemId}/served`, { isServed });
+};

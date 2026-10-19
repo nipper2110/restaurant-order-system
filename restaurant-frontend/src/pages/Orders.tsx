@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+  Check,
   ChevronLeft,
   ChevronRight,
   Lock,
@@ -11,7 +12,12 @@ import {
 } from "lucide-react";
 
 import { getErrorMessage } from "@/api";
-import { completeOrder, getOrder, getOrders } from "@/api/orders";
+import {
+  completeOrder,
+  getOrder,
+  getOrders,
+  setOrderItemServed,
+} from "@/api/orders";
 import type { Order, OrderDetail } from "@/types";
 
 const PAGE_SIZE = 8;
@@ -61,6 +67,9 @@ function Orders() {
 
   const [isCompleting, setIsCompleting] = useState(false);
   const [completeError, setCompleteError] = useState<string | null>(null);
+
+  const [servingIds, setServingIds] = useState<Set<number>>(new Set());
+  const [serveError, setServeError] = useState<string | null>(null);
 
   const fetchOrders = () => {
     return getOrders()
@@ -215,6 +224,48 @@ function Orders() {
       setCompleteError(getErrorMessage(err, "Failed to complete the order."));
     } finally {
       setIsCompleting(false);
+    }
+  };
+
+  const handleToggleServed = async (itemId: number, nextServed: boolean) => {
+    if (!selectedOrder) return;
+
+    setServeError(null);
+    setServingIds((prev) => new Set(prev).add(itemId));
+
+    // Optimistic update so the checkbox responds instantly.
+    setSelectedOrder((prev) =>
+      prev
+        ? {
+            ...prev,
+            orderItems: prev.orderItems.map((i) =>
+              i.id === itemId ? { ...i, isServed: nextServed } : i,
+            ),
+          }
+        : prev,
+    );
+
+    try {
+      await setOrderItemServed(itemId, nextServed);
+    } catch (err) {
+      setServeError(getErrorMessage(err, "Failed to update item status."));
+      // Revert on failure.
+      setSelectedOrder((prev) =>
+        prev
+          ? {
+              ...prev,
+              orderItems: prev.orderItems.map((i) =>
+                i.id === itemId ? { ...i, isServed: !nextServed } : i,
+              ),
+            }
+          : prev,
+      );
+    } finally {
+      setServingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(itemId);
+        return next;
+      });
     }
   };
 
@@ -377,6 +428,16 @@ function Orders() {
                             </td>
                             <td className="px-6 py-4 text-sm text-white/60">
                               {order.orderItems.length} items
+                              {order.orderItems.length > 0 && (
+                                <span className="ml-1.5 text-xs text-white/30">
+                                  (
+                                  {
+                                    order.orderItems.filter((i) => i.isServed)
+                                      .length
+                                  }
+                                  /{order.orderItems.length} served)
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4 text-sm font-semibold text-white tabular-nums">
                               {formatCurrency(order.totalPrice)}
@@ -538,21 +599,52 @@ function Orders() {
                 </div>
               </div>
 
-              <p className="mt-6 mb-3 text-xs font-medium tracking-wide text-white/40">
-                ORDER ITEMS
-              </p>
+              <div className="mt-6 mb-3 flex items-center justify-between">
+                <p className="text-xs font-medium tracking-wide text-white/40">
+                  ORDER ITEMS
+                </p>
+                {selectedOrder.orderItems.length > 0 && (
+                  <p className="text-xs text-white/40">
+                    {selectedOrder.orderItems.filter((i) => i.isServed).length}/
+                    {selectedOrder.orderItems.length} served
+                  </p>
+                )}
+              </div>
+              {serveError && (
+                <p className="mb-3 text-sm text-red-400">{serveError}</p>
+              )}
               <div className="flex flex-col gap-4">
                 {selectedOrder.orderItems.length === 0 ? (
                   <p className="text-sm text-white/40">No items.</p>
                 ) : (
                   selectedOrder.orderItems.map((item) => (
                     <div key={item.id} className="flex items-start gap-3">
+                      <button
+                        onClick={() =>
+                          handleToggleServed(item.id, !item.isServed)
+                        }
+                        disabled={servingIds.has(item.id)}
+                        title={item.isServed ? "Mark as not served" : "Mark as served"}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors disabled:opacity-40 ${
+                          item.isServed
+                            ? "border-[#fbbf24] bg-[#fbbf24] text-black"
+                            : "border-white/20 text-transparent hover:border-white/40"
+                        }`}
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
                       <span className="mt-0.5 text-sm font-medium text-white/50">
                         {item.quantity}x
                       </span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-medium text-white">
+                          <p
+                            className={`text-sm font-medium ${
+                              item.isServed
+                                ? "text-white/40 line-through"
+                                : "text-white"
+                            }`}
+                          >
                             {item.menuItem.name}
                           </p>
                           <p className="text-sm font-semibold text-white tabular-nums">

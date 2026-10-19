@@ -85,6 +85,7 @@ export const getOneOrder = async (id: number) => {
           note: true,
           batchNumber: true,
           createdAt: true,
+          isServed: true,
           menuItem: {
             select: {
               id: true,

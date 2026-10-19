@@ -51,6 +51,7 @@ export interface OrderItem {
   menuItemId: number;
   orderId: number;
   productOptionIds: number[];
+  isServed: boolean;
 }
 
 export type TableStatusValue = "AVAILABLE" | "OCCUPIED";
@@ -83,6 +84,7 @@ export interface OrderItemDetail {
   note: string | null;
   batchNumber: number;
   createdAt: string;
+  isServed: boolean;
   menuItem: {
     id: number;
     name: string;
