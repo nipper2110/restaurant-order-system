@@ -45,7 +45,11 @@ import {
 } from "../../../controllers/admin/orderController";
 import { updateOrderItemServedStatus } from "../../../controllers/admin/orderItemController";
 import { getDashboardStats } from "../../../controllers/admin/dashboardController";
-import { getMe } from "../../../controllers/authController";
+import {
+  changeMyPassword,
+  getMe,
+  updateMyProfile,
+} from "../../../controllers/authController";
 
 const router = express.Router();
 
@@ -96,5 +100,7 @@ router.get("/dashboard/stats", getDashboardStats);
 
 // Current admin identity
 router.get("/me", getMe);
+router.patch("/me", updateMyProfile);
+router.patch("/me/password", changeMyPassword);
 
 export default router;

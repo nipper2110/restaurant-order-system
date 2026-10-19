@@ -9,6 +9,7 @@ const navItems = [
   { label: "Dashboard", href: "/", icon: Icons.dashboard },
   { label: "Orders", href: "/orders", icon: Icons.orders },
   { label: "Menu Items", href: "/menuItems", icon: Icons.menuItems },
+  { label: "Settings", href: "/settings", icon: Icons.settings },
 ];
 
 interface CurrentAdmin {

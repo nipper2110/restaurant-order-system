@@ -41,7 +41,10 @@ export const register = [
     const user = await getUserByEmail(email);
     checkUserExist(user);
 
-    const otp = generateOtp();
+    // No email provider is wired up yet, so there's no way to deliver a
+    // real OTP outside of development. Keep it fixed and guessable only
+    // in non-production so local/dev testing still works.
+    const otp = process.env.NODE_ENV === "production" ? generateOtp() : 123456;
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
@@ -498,7 +501,10 @@ export const forgetPassword = [
     const user = await getUserByEmail(email);
     checkUserIfNotExist(user);
 
-    const otp = generateOtp();
+    // No email provider is wired up yet, so there's no way to deliver a
+    // real OTP outside of development. Keep it fixed and guessable only
+    // in non-production so local/dev testing still works.
+    const otp = process.env.NODE_ENV === "production" ? generateOtp() : 123456;
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
@@ -751,3 +757,66 @@ export const getMe = (req: MeRequest, res: Response) => {
     },
   });
 };
+
+export const updateMyProfile = [
+  body("name", "Name must be between 1 and 100 characters.")
+    .trim()
+    .notEmpty()
+    .isLength({ max: 100 }),
+  async (req: MeRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const { name } = req.body;
+    const updated = await updateUser(req.user!.id, { name });
+
+    res.status(200).json({
+      message: "Profile updated.",
+      admin: {
+        id: updated.id,
+        name: updated.name,
+        email: updated.email,
+        role: updated.role,
+      },
+    });
+  },
+];
+
+export const changeMyPassword = [
+  body("currentPassword", "Current password must be 6 digits.")
+    .notEmpty()
+    .trim()
+    .matches("^[0-9]+$")
+    .isLength({ min: 6, max: 6 }),
+  body("newPassword", "New password must be 6 digits.")
+    .notEmpty()
+    .trim()
+    .matches("^[0-9]+$")
+    .isLength({ min: 6, max: 6 }),
+  async (req: MeRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    const user = await getUserById(req.user!.id);
+    checkUserIfNotExist(user);
+
+    const isMatch = await bcrypt.compare(currentPassword, user!.password);
+    if (!isMatch) {
+      return next(
+        createError("Current password is incorrect.", 401, errorCode.invalid),
+      );
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashPassword = await bcrypt.hash(newPassword, salt);
+    await updateUser(user!.id, { password: hashPassword });
+
+    res.status(200).json({ message: "Password changed successfully." });
+  },
+];

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { LogIn } from "lucide-react";
 
 import { authApi, getErrorMessage } from "@/api";
@@ -100,6 +100,15 @@ function Login() {
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>
+
+          <p className="mt-4 text-center text-sm text-white/40">
+            <Link
+              to="/forgot-password"
+              className="text-[#fbbf24] hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </p>
         </div>
       </div>
     </div>

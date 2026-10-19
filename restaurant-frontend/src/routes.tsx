@@ -6,6 +6,8 @@ import OrdersPage from "@/pages/Orders";
 import MenuItemsPage from "@/pages/MenuItems";
 import MenuItemFormPage from "@/pages/MenuItemForm";
 import LoginPage from "@/pages/Login";
+import ForgotPasswordPage from "@/pages/ForgotPassword";
+import SettingsPage from "@/pages/Settings";
 import ErrorPage from "@/pages/Error";
 import CustomerLayout from "@/pages/customer/CustomerLayout";
 import TableMenuPage from "@/pages/customer/TableMenu";
@@ -16,6 +18,11 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     Component: LoginPage,
+    ErrorBoundary: ErrorPage,
+  },
+  {
+    path: "/forgot-password",
+    Component: ForgotPasswordPage,
     ErrorBoundary: ErrorPage,
   },
   {
@@ -61,6 +68,10 @@ export const router = createBrowserRouter([
       {
         path: "menuItems/:id/edit",
         Component: MenuItemFormPage,
+      },
+      {
+        path: "settings",
+        Component: SettingsPage,
       },
     ],
   },
