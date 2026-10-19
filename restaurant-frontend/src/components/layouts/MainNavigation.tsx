@@ -2,8 +2,8 @@ import { Icons } from "@/components/icons";
 import { siteConfig } from "@/config/site";
 import { NavLink, useNavigate } from "react-router";
 import GustoLogo from "@/assets/Gusto.png";
-import { useState } from "react";
-import { authApi } from "@/api";
+import { useEffect, useState } from "react";
+import api, { authApi } from "@/api";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Icons.dashboard },
@@ -11,9 +11,33 @@ const navItems = [
   { label: "Menu Items", href: "/menuItems", icon: Icons.menuItems },
 ];
 
+interface CurrentAdmin {
+  name: string | null;
+  email: string;
+}
+
 function MainNavigation() {
   const [open, setOpen] = useState(false);
+  const [admin, setAdmin] = useState<CurrentAdmin | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    api
+      .get("/admins/me")
+      .then(({ data }) => {
+        if (isMounted) setAdmin(data.admin);
+      })
+      .catch(() => {
+        // Silently ignore — the 401 interceptor already redirects to
+        // /login if the session itself is invalid.
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -22,6 +46,9 @@ function MainNavigation() {
       navigate("/login", { replace: true });
     }
   };
+
+  const displayName = admin?.name?.trim() || admin?.email || "";
+  const initial = displayName ? displayName[0].toUpperCase() : "";
 
   return (
     <>
@@ -96,13 +123,17 @@ function MainNavigation() {
         {/* User */}
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#4d3a00] text-sm font-semibold text-[#fbbf24]">
-              A
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#4d3a00] text-sm font-semibold text-[#fbbf24]">
+              {initial}
             </div>
 
             <div className="min-w-0">
-              <p className="text-sm font-semibold">Admin User</p>
-              <p className="truncate text-xs text-white/40">admin@gusto.com</p>
+              <p className="truncate text-sm font-semibold">
+                {admin?.name?.trim() || "Admin"}
+              </p>
+              <p className="truncate text-xs text-white/40">
+                {admin?.email ?? ""}
+              </p>
             </div>
           </div>
 

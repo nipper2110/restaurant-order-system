@@ -720,3 +720,22 @@ export const resetPassword = [
       });
   },
 ];
+
+interface MeRequest extends Request {
+  user?: { id: number; name: string | null; email: string; role: string };
+}
+
+// req.user is already populated (minus the admin's own password/randToken
+// fields) by the authorise middleware that guards every /admins route.
+export const getMe = (req: MeRequest, res: Response) => {
+  const user = req.user!;
+  res.status(200).json({
+    message: "Current admin",
+    admin: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
+};

@@ -45,6 +45,7 @@ import {
 } from "../../../controllers/admin/orderController";
 import { updateOrderItemServedStatus } from "../../../controllers/admin/orderItemController";
 import { getDashboardStats } from "../../../controllers/admin/dashboardController";
+import { getMe } from "../../../controllers/authController";
 
 const router = express.Router();
 
@@ -92,5 +93,8 @@ router.patch("/order-items/:id/served", updateOrderItemServedStatus);
 
 // Dashboard
 router.get("/dashboard/stats", getDashboardStats);
+
+// Current admin identity
+router.get("/me", getMe);
 
 export default router;
