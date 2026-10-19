@@ -26,6 +26,9 @@ model Admin {
   password        String
   lastLogin       DateTime?
   errorLoginCount Int       @default(0) @db.SmallInt
+  // Set to "FREEZE" after repeated failed logins in one day; login is
+  // blocked until a successful password reset clears it back to "ACTIVE".
+  status          String    @default("ACTIVE") @db.VarChar(20)
   randToken       String
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

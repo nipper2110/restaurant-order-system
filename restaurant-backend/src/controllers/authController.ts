@@ -23,7 +23,7 @@ import {
   checkUserExist,
   checkUserIfNotExist,
 } from "../utils/auth";
-import { generateToken } from "../utils/generate";
+import { generateOtp, generateToken } from "../utils/generate";
 
 export const register = [
   body("email", "Invalid email").trim().notEmpty().isEmail().normalizeEmail(),
@@ -41,7 +41,7 @@ export const register = [
     const user = await getUserByEmail(email);
     checkUserExist(user);
 
-    const otp = 123456; // for testing
+    const otp = generateOtp();
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
@@ -314,6 +314,16 @@ export const login = [
     const user = await getUserByEmail(email);
     checkUserIfNotExist(user);
 
+    if (user!.status === "FREEZE") {
+      return next(
+        createError(
+          "This account is frozen after too many failed login attempts. Reset your password to unlock it.",
+          403,
+          errorCode.forbidden,
+        ),
+      );
+    }
+
     const isMatchPassword = await bcrypt.compare(password, user!.password);
     if (!isMatchPassword) {
       // Starting to record wrong times
@@ -488,8 +498,7 @@ export const forgetPassword = [
     const user = await getUserByEmail(email);
     checkUserIfNotExist(user);
 
-    const otp = 123456;
-    // const otp = generateOtp();
+    const otp = generateOtp();
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
@@ -691,10 +700,13 @@ export const resetPassword = [
       },
     );
 
-    // Updating randToken with refreshToken
+    // Updating randToken with refreshToken. A successful reset is also the
+    // one legitimate way to clear a FREEZE lock from failed login attempts.
     const userUpdateData = {
       password: hashPassword,
       randToken: refreshToken,
+      status: "ACTIVE",
+      errorLoginCount: 0,
     };
     await updateUser(user!.id, userUpdateData);
 

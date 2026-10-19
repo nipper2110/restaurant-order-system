@@ -24,7 +24,10 @@ export const createOrderItem = [
   param("orderId", "Order id is required").isInt({ min: 1 }),
   body("tableId", "Table ID is required.").isInt({ min: 1 }),
   body("menuItemId", "Menu item id is required").isInt({ min: 1 }),
-  body("quantity", "Quantity must be at least 1").isInt({ min: 1 }),
+  body("quantity", "Quantity must be between 1 and 50.").isInt({
+    min: 1,
+    max: 50,
+  }),
   body("productOptionIds", "Product option IDs must be an array.")
     .isArray()
     .optional(),
@@ -82,9 +85,15 @@ export const createOrderItem = [
 export const confirmOrder = [
   param("orderId", "Order id is required").isInt({ min: 1 }),
   body("tableId", "Table ID is required.").isInt({ min: 1 }),
-  body("items", "At least one item is required.").isArray({ min: 1 }),
+  body("items", "Between 1 and 50 items are required.").isArray({
+    min: 1,
+    max: 50,
+  }),
   body("items.*.menuItemId", "Menu item id is required").isInt({ min: 1 }),
-  body("items.*.quantity", "Quantity must be at least 1").isInt({ min: 1 }),
+  body("items.*.quantity", "Quantity must be between 1 and 50.").isInt({
+    min: 1,
+    max: 50,
+  }),
   body("items.*.productOptionIds", "Product option IDs must be an array.")
     .isArray()
     .optional(),
@@ -129,7 +138,9 @@ export const confirmOrder = [
 export const updateOrderItem = [
   param("id", "Order item ID is required.").isInt({ min: 1 }),
   body("tableId", "Table ID is required.").isInt({ min: 1 }),
-  body("quantity", "Quantity must be at least 1.").isInt({ min: 1 }).optional(),
+  body("quantity", "Quantity must be between 1 and 50.")
+    .isInt({ min: 1, max: 50 })
+    .optional(),
   body("note", "Note must be a string with a maximum length of 255 characters.")
     .isString()
     .isLength({ max: 255 })
