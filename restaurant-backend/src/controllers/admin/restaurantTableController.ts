@@ -21,6 +21,7 @@ import {
   getRestaurantTableByNumber,
   getRestaurantTableByQrCode,
   getRestaurantTableList,
+  getRestaurantTableOrderCount,
   RestaurantTableArgs,
   updateOneRestaurantTable,
 } from "../../services/restaurantTableService";
@@ -82,7 +83,7 @@ export const createRestaurantTable = [
 
 export const updateRestaurantTable = [
   body("tableId", "Table Id is required.").isInt({ min: 1 }),
-  body("tableNumber", "Invalid table number.").isInt({ min: 1 }),
+  body("tableNumber", "Invalid table number.").optional().isInt({ min: 1 }),
   body("status", "Status is invalid")
     .optional()
     .isIn(["AVAILABLE", "OCCUPIED"]),
@@ -101,12 +102,12 @@ export const updateRestaurantTable = [
       );
     }
 
-    const qrCode = generateQrCode();
-
+    // The QR code printed on the physical table must never change from a
+    // routine edit — only the dedicated regenerate endpoint may rotate it.
     const data: any = {
-      tableNumber,
-      qrCode,
-      status,
+      tableNumber: tableNumber ?? restaurantTable.tableNumber,
+      qrCode: restaurantTable.qrCode,
+      status: status ?? restaurantTable.status,
     };
 
     const restaurantTableUpdated = await updateOneRestaurantTable(
@@ -130,6 +131,51 @@ export const updateRestaurantTable = [
   },
 ];
 
+export const regenerateRestaurantTableQrCode = [
+  param("id", "Table ID is required.").isInt({ min: 1 }),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const tableId = Number(req.params.id);
+
+    const restaurantTable = await getRestaurantTableById(tableId);
+    checkModelIfNotExist(restaurantTable);
+
+    let qrCode = generateQrCode();
+    const existingQrCode = await getRestaurantTableByQrCode(qrCode);
+    if (existingQrCode) {
+      // Astronomically unlikely — retry once with a fresh code.
+      qrCode = generateQrCode();
+    }
+
+    const restaurantTableUpdated = await updateOneRestaurantTable(
+      restaurantTable!.id,
+      {
+        tableNumber: restaurantTable!.tableNumber,
+        qrCode,
+        status: restaurantTable!.status,
+      },
+    );
+
+    await CacheQueue.add(
+      "invalidate-restaurant-table-cache",
+      {
+        pattern: "restaurantTables:*",
+      },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    res.status(200).json({
+      message: "Successfully regenerated the table's QR code.",
+      restaurantTableId: restaurantTableUpdated.id,
+      qrCode: restaurantTableUpdated.qrCode,
+    });
+  },
+];
+
 export const deleteRestaurantTable = [
   body("tableId", "Table Id is required.").isInt({ gt: 0 }),
 
@@ -140,10 +186,20 @@ export const deleteRestaurantTable = [
     }
 
     const { tableId } = req.body;
-    const user = req.user;
 
     const restaurantTable = await getRestaurantTableById(+tableId);
     checkModelIfNotExist(restaurantTable);
+
+    const orderCount = await getRestaurantTableOrderCount(restaurantTable!.id);
+    if (orderCount > 0) {
+      return next(
+        createError(
+          "This table has existing orders and can't be deleted.",
+          409,
+          errorCode.invalid,
+        ),
+      );
+    }
 
     const restaurantTableDeleted = await deleteOneRestaurantTable(
       restaurantTable!.id,

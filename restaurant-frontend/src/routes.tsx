@@ -8,6 +8,7 @@ import MenuItemFormPage from "@/pages/MenuItemForm";
 import LoginPage from "@/pages/Login";
 import ForgotPasswordPage from "@/pages/ForgotPassword";
 import SettingsPage from "@/pages/Settings";
+import TablesPage from "@/pages/Tables";
 import ErrorPage from "@/pages/Error";
 import CustomerLayout from "@/pages/customer/CustomerLayout";
 import TableMenuPage from "@/pages/customer/TableMenu";
@@ -68,6 +69,10 @@ export const router = createBrowserRouter([
       {
         path: "menuItems/:id/edit",
         Component: MenuItemFormPage,
+      },
+      {
+        path: "tables",
+        Component: TablesPage,
       },
       {
         path: "settings",

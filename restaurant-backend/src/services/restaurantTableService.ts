@@ -76,6 +76,10 @@ export const updateOneRestaurantTable = async (
   });
 };
 
+export const getRestaurantTableOrderCount = async (id: number) => {
+  return prisma.order.count({ where: { tableId: id } });
+};
+
 export const deleteOneRestaurantTable = async (id: number) => {
   return prisma.restaurantTable.delete({
     where: { id },

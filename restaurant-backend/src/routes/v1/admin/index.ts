@@ -35,6 +35,7 @@ import {
   deleteRestaurantTable,
   getRestaurantTable,
   getRestaurantTables,
+  regenerateRestaurantTableQrCode,
   updateRestaurantTable,
 } from "../../../controllers/admin/restaurantTableController";
 import {
@@ -87,6 +88,7 @@ router.get("/restaurant-tables", auth, getRestaurantTables);
 router.get("/restaurant-tables/:id", auth, getRestaurantTable);
 router.patch("/restaurant-tables", updateRestaurantTable);
 router.delete("/restaurant-tables", deleteRestaurantTable);
+router.post("/restaurant-tables/:id/regenerate-qr", regenerateRestaurantTableQrCode);
 
 // For Order
 router.post("/orders", createOrder);
