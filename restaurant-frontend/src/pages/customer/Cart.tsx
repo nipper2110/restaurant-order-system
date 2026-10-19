@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react";
 
 import { getErrorMessage } from "@/api";
 import { confirmOrder, getOrder, verifyTable, type TableSession } from "@/api/customer";
@@ -125,6 +125,13 @@ function Cart() {
 
   return (
     <div className="px-4 pt-4 pb-10">
+      <button
+        onClick={() => navigate(`/order/${qrToken}`)}
+        className="mb-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/70 hover:text-white"
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </button>
+
       <h1 className="text-xl font-bold text-[#fbbf24]">Your Order</h1>
       <p className="text-sm text-gray-400">
         Table {String(session.tableNumber).padStart(2, "0")}
