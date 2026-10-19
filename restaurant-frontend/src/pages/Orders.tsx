@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  Lock,
   MessageSquare,
   RefreshCw,
   Search,
@@ -10,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { getErrorMessage } from "@/api";
-import { getOrder, getOrders } from "@/api/orders";
+import { completeOrder, getOrder, getOrders } from "@/api/orders";
 import type { Order, OrderDetail } from "@/types";
 
 const PAGE_SIZE = 8;
@@ -57,6 +58,9 @@ function Orders() {
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
+
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   const fetchOrders = () => {
     return getOrders()
@@ -197,6 +201,23 @@ function Orders() {
     ? selectedOrder.orderItems.reduce((sum, item) => sum + Number(item.price), 0)
     : 0;
 
+  const handleCompleteOrder = async () => {
+    if (!selectedOrder) return;
+
+    setCompleteError(null);
+    setIsCompleting(true);
+    try {
+      await completeOrder(selectedOrder.id);
+      const updated = await getOrder(selectedOrder.id);
+      setSelectedOrder(updated);
+      fetchOrders();
+    } catch (err) {
+      setCompleteError(getErrorMessage(err, "Failed to complete the order."));
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Toolbar */}
@@ -322,6 +343,9 @@ function Orders() {
                         <th className="px-6 py-3 text-xs font-medium tracking-wide text-white/40">
                           TIME
                         </th>
+                        <th className="px-6 py-3 text-xs font-medium tracking-wide text-white/40">
+                          STATUS
+                        </th>
                         <th className="px-6 py-3 text-xs font-medium tracking-wide text-white/40 text-right">
                           ACTION
                         </th>
@@ -359,6 +383,17 @@ function Orders() {
                             </td>
                             <td className="px-6 py-4 text-sm text-white/40">
                               {formatTime(order.createdAt)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                                  order.completedAt
+                                    ? "bg-white/5 text-white/40"
+                                    : "bg-emerald-400/10 text-emerald-400"
+                                }`}
+                              >
+                                {order.completedAt ? "Completed" : "Open"}
+                              </span>
                             </td>
                             <td className="px-6 py-4 text-right">
                               <button
@@ -434,9 +469,22 @@ function Orders() {
               <p className="text-xs font-medium tracking-wide text-white/40">
                 ORDER DETAILS
               </p>
-              <p className="mt-0.5 text-lg font-semibold text-white">
-                {selectedOrder ? orderLabel(selectedOrder.id) : "—"}
-              </p>
+              <div className="mt-0.5 flex items-center gap-2">
+                <p className="text-lg font-semibold text-white">
+                  {selectedOrder ? orderLabel(selectedOrder.id) : "—"}
+                </p>
+                {selectedOrder && (
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                      selectedOrder.completedAt
+                        ? "bg-white/5 text-white/40"
+                        : "bg-emerald-400/10 text-emerald-400"
+                    }`}
+                  >
+                    {selectedOrder.completedAt ? "Completed" : "Open"}
+                  </span>
+                )}
+              </div>
             </div>
             {selectedOrderId !== null && (
               <button
@@ -542,6 +590,25 @@ function Orders() {
                   </span>
                 </div>
               </div>
+
+              {completeError && (
+                <p className="mt-4 text-sm text-red-400">{completeError}</p>
+              )}
+
+              {selectedOrder.completedAt ? (
+                <p className="mt-4 text-center text-xs text-white/40">
+                  Table closed at {formatTime(selectedOrder.completedAt)}
+                </p>
+              ) : (
+                <button
+                  onClick={handleCompleteOrder}
+                  disabled={isCompleting}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#fbbf24] px-4 py-3 text-sm font-semibold text-black disabled:opacity-50"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  {isCompleting ? "Closing table..." : "Complete Order & Close Table"}
+                </button>
+              )}
             </>
           )}
         </div>

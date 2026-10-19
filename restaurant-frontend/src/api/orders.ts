@@ -10,3 +10,7 @@ export const getOrder = async (id: number): Promise<OrderDetail> => {
   const { data } = await api.get(`/admins/orders/${id}`);
   return data.order;
 };
+
+export const completeOrder = async (id: number): Promise<void> => {
+  await api.post(`/admins/orders/${id}/complete`);
+};

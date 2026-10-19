@@ -66,6 +66,7 @@ export interface Order {
   id: number;
   totalPrice: string;
   createdAt: string;
+  completedAt: string | null;
   tableId: number;
   table: {
     id: number;
@@ -100,6 +101,7 @@ export interface OrderDetail {
   id: number;
   totalPrice: string;
   createdAt: string;
+  completedAt: string | null;
   tableId: number;
   table: {
     id: number;

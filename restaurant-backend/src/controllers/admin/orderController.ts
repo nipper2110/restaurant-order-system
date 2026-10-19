@@ -8,6 +8,7 @@ import { getUserById } from "../../services/authService";
 import { checkUserIfNotExist } from "../../utils/auth";
 import { getOrSetCache } from "../../utils/cache";
 import {
+  completeOneOrder,
   createOneOrder,
   getOneOrder,
   getOrderByTableId,
@@ -72,6 +73,38 @@ export const createOrder = [
   },
 ];
 
+export const completeOrder = [
+  param("id", "Order ID is required.").isInt({ min: 1 }),
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const errors = validationResult(req).array({ onlyFirstError: true });
+    if (errors.length > 0) {
+      return next(createError(errors[0].msg, 400, errorCode.invalid));
+    }
+
+    const orderId = Number(req.params.id);
+
+    const order = await completeOneOrder(orderId);
+
+    await CacheQueue.add(
+      "invalidate-order-cache",
+      { pattern: "orders:*" },
+      { jobId: `invalidate-${Date.now()}`, priority: 1 },
+    );
+
+    // Completing an order frees the table — keep table/dashboard caches fresh.
+    await CacheQueue.add(
+      "invalidate-restaurant-table-cache",
+      { pattern: "restaurantTables:*" },
+      { jobId: `invalidate-${Date.now()}-tables`, priority: 1 },
+    );
+
+    res.status(200).json({
+      message: "Order completed and table closed.",
+      order,
+    });
+  },
+];
+
 export const getOrder = [
   param("id", "Order ID is required.").isInt({ min: 1 }),
   async (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -127,6 +160,7 @@ export const getOrders = [
         id: true,
         totalPrice: true,
         createdAt: true,
+        completedAt: true,
         tableId: true,
         table: {
           select: {

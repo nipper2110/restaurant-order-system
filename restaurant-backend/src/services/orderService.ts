@@ -32,9 +32,33 @@ export const createOneOrder = async (orderData: orderArgs) => {
 };
 
 export const getOrderByTableId = async (id: number) => {
+  // Only the table's currently active order — a completed one shouldn't be
+  // resumed by a later QR scan.
   return prisma.order.findFirst({
-    where: { tableId: id },
+    where: { tableId: id, completedAt: null },
   });
+};
+
+export const completeOneOrder = async (orderId: number) => {
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!order) {
+    throw createError("Order not found.", 404, errorCode.notFound);
+  }
+  if (order.completedAt) {
+    throw createError("Order is already completed.", 400, errorCode.invalid);
+  }
+
+  const updatedOrder = await prisma.order.update({
+    where: { id: orderId },
+    data: { completedAt: new Date() },
+  });
+
+  await prisma.restaurantTable.update({
+    where: { id: order.tableId },
+    data: { status: TableStatus.AVAILABLE },
+  });
+
+  return updatedOrder;
 };
 
 export const getOneOrder = async (id: number) => {
@@ -44,6 +68,7 @@ export const getOneOrder = async (id: number) => {
       id: true,
       totalPrice: true,
       createdAt: true,
+      completedAt: true,
       tableId: true,
       table: {
         select: {

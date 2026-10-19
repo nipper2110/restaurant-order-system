@@ -38,6 +38,7 @@ import {
   updateRestaurantTable,
 } from "../../../controllers/admin/restaurantTableController";
 import {
+  completeOrder,
   createOrder,
   getOrder,
   getOrders,
@@ -85,6 +86,7 @@ router.delete("/restaurant-tables", deleteRestaurantTable);
 router.post("/orders", createOrder);
 router.get("/orders", getOrders);
 router.get("/orders/:id", getOrder);
+router.post("/orders/:id/complete", completeOrder);
 
 // Dashboard
 router.get("/dashboard/stats", getDashboardStats);

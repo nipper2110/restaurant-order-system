@@ -111,6 +111,11 @@ model Order {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  // Null while the table is still dining — set when an admin closes the
+  // table, so the next QR scan starts a brand new order instead of
+  // resuming this one.
+  completedAt DateTime?
+
   tableId Int
   table   RestaurantTable @relation(fields: [tableId], references: [id])
 
