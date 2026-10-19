@@ -24,6 +24,7 @@ import {
   checkUserIfNotExist,
 } from "../utils/auth";
 import { generateOtp, generateToken } from "../utils/generate";
+import { sendOtpEmail } from "../services/emailService";
 
 export const register = [
   body("email", "Invalid email").trim().notEmpty().isEmail().normalizeEmail(),
@@ -41,14 +42,13 @@ export const register = [
     const user = await getUserByEmail(email);
     checkUserExist(user);
 
-    // No email provider is wired up yet, so there's no way to deliver a
-    // real OTP outside of development. Keep it fixed and guessable only
-    // in non-production so local/dev testing still works.
-    const otp = process.env.NODE_ENV === "production" ? generateOtp() : 123456;
+    const otp = generateOtp();
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
     const token = generateToken();
+
+    await sendOtpEmail(email, otp);
 
     const otpRow = await getOtpByEmail(email);
 
@@ -501,14 +501,13 @@ export const forgetPassword = [
     const user = await getUserByEmail(email);
     checkUserIfNotExist(user);
 
-    // No email provider is wired up yet, so there's no way to deliver a
-    // real OTP outside of development. Keep it fixed and guessable only
-    // in non-production so local/dev testing still works.
-    const otp = process.env.NODE_ENV === "production" ? generateOtp() : 123456;
+    const otp = generateOtp();
     const salt = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp.toString(), salt);
 
     const token = generateToken();
+
+    await sendOtpEmail(email, otp);
 
     const otpRow = await getOtpByEmail(email);
 
